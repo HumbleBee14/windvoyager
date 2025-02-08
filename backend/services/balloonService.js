@@ -2,58 +2,63 @@ const axios = require("axios");
 
 const BASE_URL = "https://a.windbornesystems.com/treasure/";
 
+// Function to clean and validate balloon data
+function cleanBalloonData(data, hoursAgo) {
+  if (typeof data === "string") {
+    try {
+      // Replace 'NaN' with 'null' to allow JSON parsing
+      let sanitizedDataString = data.replace(/NaN/g, "null");
+
+      // Fix missing brackets
+      if (!sanitizedDataString.startsWith("[")) sanitizedDataString = `[${sanitizedDataString}`;
+      if (!sanitizedDataString.endsWith("]")) sanitizedDataString = `${sanitizedDataString}]`;
+
+      // Parse the cleaned-up data
+      data = JSON.parse(sanitizedDataString);
+    } catch (error) {
+      console.error(`Corrupted JSON at ${hoursAgo}H - Cannot fix:`, error.message);
+      return []; // Ignore completely corrupted data
+    }
+  }
+
+  if (!Array.isArray(data)) {
+    console.warn(`Unexpected data format at ${hoursAgo}H - Ignoring dataset.`);
+    return [];
+  }
+
+  // Ensure the structure is correct (wrap missing outer brackets)
+  if (data.length > 0 && !Array.isArray(data[0])) {
+    data = [data];
+  }
+
+  // Filter out records where any value is NaN or null
+  const cleanedData = data.filter((record) => {
+    // record.every((value) => value !== null && !isNaN(value));
+    const isValid = record.every((value) => value !== null && !isNaN(value));
+    // if (!isValid) {
+    //   console.warn(`Dropping invalid record at ${hoursAgo}H:`, record);
+    // }
+    return isValid;
+  });
+
+  console.log(`Hour ${hoursAgo}: Cleaned dataset contains ${cleanedData.length} records.`);
+  return cleanedData;
+}
+
+// Fetch data from WindBorne API
 async function fetchBalloonData(hoursAgo = 0) {
   try {
     const url = `${BASE_URL}${hoursAgo.toString().padStart(2, "0")}.json`;
     const response = await axios.get(url, { timeout: 5000 });
 
-    let data = response.data;
-
-    // console.log(typeof data);
-
-    // Check if data is a string (meaning it's wrongly formatted JSON)
-    if (typeof data === "string") {
-      try {
-        // Replace 'NaN' with a valid JSON value (null or a string placeholder! Let's go with null for now, will see later if needs change - TODO)
-        let sanitizedDataString = data.replace(/NaN/g, 'null');
-        
-        // Handle cases where the opening or closing brackets are missing
-        if (!sanitizedDataString.startsWith('[')) {
-            sanitizedDataString = `[${sanitizedDataString}`;
-        }
-        if (!sanitizedDataString.endsWith(']')) {
-        sanitizedDataString = `${sanitizedDataString}]`;
-        }
-    
-        // Parse the cleaned-up data
-        data = JSON.parse(sanitizedDataString);
-
-        // console.warn(`Fixed malformed JSON at ${hoursAgo}H`);
-      } catch (parseError) {
-        console.error(`Corrupted JSON at ${hoursAgo}H - Cannot fix`, parseError.message);
-        return []; // Ignore corrupted data
-      }
-    }
-    
-    if (Array.isArray(data)) {
-        // check if the data is missing the outer brackets
-        if (data.length > 0 && !Array.isArray(data[0])) {
-            // If the first item is not an array, wrap the data in an array
-            data = [data];
-        }
-        console.warn(`GOT Perfect JSON at ${hoursAgo}H`);
-        return data;
-      } else {
-        console.warn(`Unexpected data format at ${hoursAgo}H`);
-        return [];
-      }
-
+    return cleanBalloonData(response.data, hoursAgo);
   } catch (error) {
-    console.error(`Error fetching data from ${hoursAgo}H ago:`, error.message);
+    console.error(`❌ Error fetching data from ${hoursAgo}H ago:`, error.message);
     return [];
   }
 }
 
+// Fetch the last 24 hours of balloon data
 async function fetchLast24HoursData() {
   const allData = {};
   const fetchPromises = [];
@@ -62,11 +67,9 @@ async function fetchLast24HoursData() {
     fetchPromises.push(fetchBalloonData(i));
   }
 
-// fetchPromises.push(fetchBalloonData(19)); // test
-
   const results = await Promise.all(fetchPromises);
   results.forEach((data, index) => {
-    allData[index] = data; // Store results with hour keys
+    allData[index] = data; // Store cleaned results
   });
 
   return allData;
