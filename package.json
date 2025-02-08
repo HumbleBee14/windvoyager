@@ -1,0 +1,14 @@
+{
+    "name": "windvoyager",
+    "private": true,
+    "scripts": {
+        "start": "concurrently \"cd backend && npm start\" \"cd frontend && npm start\""
+    },
+    "devDependencies": {
+        "concurrently": "^7.0.0"
+    },
+    "dependencies": {
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
+    }
+}
