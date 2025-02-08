@@ -31,14 +31,10 @@ function cleanBalloonData(data, hoursAgo) {
     data = [data];
   }
 
-  // Filter out records where any value is NaN or null
-  const cleanedData = data.filter((record) => {
-    // record.every((value) => value !== null && !isNaN(value));
+  // now we will replace invalid records with `[NaN]`
+  const cleanedData = data.map((record) => {
     const isValid = record.every((value) => value !== null && !isNaN(value));
-    // if (!isValid) {
-    //   console.warn(`Dropping invalid record at ${hoursAgo}H:`, record);
-    // }
-    return isValid;
+    return isValid ? record : [NaN];
   });
 
   console.log(`Hour ${hoursAgo}: Cleaned dataset contains ${cleanedData.length} records.`);

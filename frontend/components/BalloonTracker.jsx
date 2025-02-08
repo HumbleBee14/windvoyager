@@ -22,7 +22,7 @@ const blueMarker = new L.Icon({
 
 const BalloonTracker = () => {
   const [balloons, setBalloons] = useState({});
-  const [balloonId, setBalloonId] = useState("");
+  const [balloonId, setBalloonId] = useState(1);
   const [trajectory, setTrajectory] = useState([]);
 
   const fetchData = async () => {
@@ -40,6 +40,11 @@ const BalloonTracker = () => {
     fetchData();
   }, []);
 
+  // Fetch trajectory whenever balloon ID changes (for auto-update)
+  useEffect(() => {
+    extractBalloonTrajectory();
+  }, [balloonId]);
+
   const extractBalloonTrajectory = () => {
     if (!balloonId || isNaN(balloonId) || balloonId < 1 || balloonId > 1000) return;
 
@@ -50,19 +55,18 @@ const BalloonTracker = () => {
       const hourData = balloons[hour] || [];
       const balloonData = hourData[balloonId - 1];
 
-      if (balloonData && !balloonData.includes(null)) {
+      if (balloonData && balloonData.length > 1) {
         balloonTrajectory.push({
           position: [balloonData[0], balloonData[1]],
-          altitude: balloonData[2], 
-          hour, 
+          altitude: balloonData[2],
+          hour,
           missing: false
         });
         lastValidPoint = balloonData;
       } else if (lastValidPoint) {
-        // Keep track of missing data and use red marker
         const midpoint = [
-          (lastValidPoint[0] + (balloonData?.[0] ?? lastValidPoint[0])) / 2,
-          (lastValidPoint[1] + (balloonData?.[1] ?? lastValidPoint[1])) / 2
+          (lastValidPoint[0] + lastValidPoint[0]) / 2,
+          (lastValidPoint[1] + lastValidPoint[1]) / 2
         ];
         balloonTrajectory.push({ position: midpoint, hour, missing: true });
       }
@@ -80,7 +84,7 @@ const BalloonTracker = () => {
           min="1"
           max="1000"
           value={balloonId}
-          onChange={(e) => setBalloonId(e.target.value)}
+          onChange={(e) => setBalloonId(parseInt(e.target.value, 10) || 1)}
           style={{ width: "60px", textAlign: "center" }}
         />
         <button onClick={extractBalloonTrajectory} style={{ padding: "5px 10px", cursor: "pointer" }}>
@@ -100,6 +104,7 @@ const BalloonTracker = () => {
                 <strong style={{ color: "red" }}>Missing Data at {balloon.hour}H ago</strong>
               ) : (
                 <>
+                  <strong>Balloon #:</strong> {balloonId} <br />
                   <strong>Hour:</strong> {balloon.hour}H ago <br />
                   <strong>Latitude:</strong> {balloon.position[0].toFixed(5)}° <br />
                   <strong>Longitude:</strong> {balloon.position[1].toFixed(5)}° <br />
