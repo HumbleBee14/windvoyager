@@ -37,19 +37,21 @@ const BalloonDataPopup = ({ data, balloonId, onClose }) => {
               <th>Type</th>
             </tr>
           </thead>
+
           <tbody>
             {data.map((entry, index) => (
               <tr key={index} className={entry.type.includes("Missing") ? "missing-row" : "recorded-row"}>
                 <td>{entry.hour}H</td>
-                <td>{entry.lat.toFixed(5)}</td>
-                <td>{entry.lon.toFixed(5)}</td>
-                <td>{entry.alt}</td>
+                <td>{entry.lat !== "Missing" ? entry.lat.toFixed(5) : "-"}</td>
+                <td>{entry.lon !== "Missing" ? entry.lon.toFixed(5) : "-"}</td>
+                <td>{entry.alt !== "Missing" ? entry.alt.toFixed(2) : "-"}</td>
                 <td className={entry.type.includes("Missing") ? "missing-text" : "recorded-text"}>
                   {entry.type}
                 </td>
               </tr>
             ))}
           </tbody>
+
         </table>
       </div>
     </Draggable>

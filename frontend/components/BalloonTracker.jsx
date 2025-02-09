@@ -118,6 +118,7 @@ const BalloonTracker = () => {
 
       } else {
         // Track missing hour
+        balloonLog.push({ hour, lat: "Missing", lon: "Missing", alt: "Missing", type: "Missing" });
         missingTimestamps.add(hour);
       }
     }
