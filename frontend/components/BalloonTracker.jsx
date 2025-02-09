@@ -38,6 +38,7 @@ const BalloonTracker = () => {
   const [balloons, setBalloons] = useState({});
   const [balloonId, setBalloonId] = useState(1);
   const [trajectory, setTrajectory] = useState([]); // Stores only valid recorded data
+  const [originalTrajectoryData, setOriginalTrajectoryData] = useState([]); // Stores unmodified original data
   const [missingHours, setMissingHours] = useState(new Set()); // Stores missing hour timestamps
   const [balloonDataLog, setBalloonDataLog] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
@@ -61,38 +62,74 @@ const BalloonTracker = () => {
     extractBalloonTrajectory();
   }, [balloonId]);
 
+  // --------------------------------------------------------------------------------
+  
   const extractBalloonTrajectory = () => {
     if (!balloonId || isNaN(balloonId) || balloonId < 1 || balloonId > 1000) return;
-
+  
     const recordedTrajectory = [];
+    const originalData = []; // Stores original, unmodified data
     const missingTimestamps = new Set();
     const balloonLog = [];
-
+  
+    let lastValidLongitude = null; // Track previous longitude
+  
     for (let hour = 0; hour < 24; hour++) {
       const hourData = balloons[hour] || [];
       const balloonData = hourData[balloonId - 1];
 
       if (balloonData && !balloonData.includes(null)) {
-        // Only push valid recorded data
-        recordedTrajectory.push({
-          position: [balloonData[0], balloonData[1]],
-          altitude: balloonData[2],
+        let lat = balloonData[0];
+        let lon = balloonData[1];
+        let alt = balloonData[2];
+
+        // Store **original data** without any modification
+        originalData.push({
+          position: [lat, lon],
+          altitude: alt,
           hour,
           missing: false
         });
 
-        balloonLog.push({ hour, lat: balloonData[0], lon: balloonData[1], alt: balloonData[2], type: "Recorded" });
+        balloonLog.push({ hour, lat, lon, alt, type: "Recorded" });  // NOTE: Importatn to keep it here, to keep log data original
+
+        // If there's a previous point, check for sudden longitude wraparound
+        if (lastValidLongitude !== null) {
+          let lonDiff = lon - lastValidLongitude;
+
+          if (Math.abs(lonDiff) > 180) {
+            // If crossing the IDL, adjust longitude by shifting range
+            if (lon > 0) {
+              lon -= 360; // Convert from 179°E to -181°W
+            } else {
+              lon += 360; // Convert from -179°W to 181°E
+            }
+          }
+        }
+
+        lastValidLongitude = lon; // Update last valid longitude
+
+        recordedTrajectory.push({
+          position: [lat, lon],
+          altitude: alt,
+          hour,
+          missing: false
+        });
+
       } else {
-        // Track missing hour but don't add to trajectory
+        // Track missing hour
         missingTimestamps.add(hour);
       }
     }
 
     setTrajectory(recordedTrajectory);
+    setOriginalTrajectoryData(originalData);
     setBalloonDataLog(balloonLog);
     setMissingHours(missingTimestamps);
     console.log(`Missing Hours: ${Array.from(missingTimestamps).join(", ")}`);
   };
+
+  // --------------------------------------------------------------------------------
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
