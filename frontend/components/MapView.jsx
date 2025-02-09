@@ -1,12 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect  } from "react";
 import ConstellationView from "./ConstellationView";
 import BalloonTracker from "./BalloonTracker";
+import { fetchBalloonData } from "../services/balloonService";
 
 const MapView = () => {
-  const [mode, setMode] = useState("constellation"); // Default: Hourly Constellation View
+  const [mode, setMode] = useState("constellation"); // Default
+  const [balloonData, setBalloonData] = useState(null);
+  const [selectedBalloonId, setSelectedBalloonId] = useState(null);
 
-  // --------------------------------------------------------------------------------------------
   
+
+  // Fetch Data on Load
+  useEffect(() => {
+    loadBalloonData();
+  }, []);
+
+  // Function to Fetch Data
+  const loadBalloonData = async () => {
+    const data = await fetchBalloonData();
+    if (data) {
+      setBalloonData(data);
+    }
+  };
+
+  const handleTrackBalloon = (balloonId) => {
+    setSelectedBalloonId(balloonId);
+    setMode("tracker");
+  };
+  
+  // --------------------------------------------------------------------------------------------
+
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
       {/* <h2>WindVoyager - Balloon Tracker</h2> */}
@@ -21,8 +44,11 @@ const MapView = () => {
         </button>
       </div>
 
-      {/* Render Selected Mode */}
-      {mode === "constellation" ? <ConstellationView /> : <BalloonTracker />}
+      {mode === "constellation" ? (
+        <ConstellationView balloonData={balloonData}  refreshData={loadBalloonData} trackBalloon={handleTrackBalloon} />
+      ) : (
+        <BalloonTracker balloonData={balloonData} initialBalloonId={selectedBalloonId} />
+      )}
     </div>
   );
 };

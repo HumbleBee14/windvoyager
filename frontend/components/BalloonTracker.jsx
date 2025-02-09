@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from "react-leaflet";
-import axios from "axios";
 import BalloonDataPopup from "./BalloonDataPopup";
 import "./BalloonDataPopup.css";
 import L from "leaflet";
@@ -34,38 +33,28 @@ const AutoZoom = ({ trajectory }) => {
   return null;
 };
 
-const BalloonTracker = () => {
-  const [balloons, setBalloons] = useState({});
-  const [balloonId, setBalloonId] = useState(1);
+const BalloonTracker = ({balloonData, initialBalloonId }) => {
+  const [balloonId, setBalloonId] = useState(initialBalloonId  || 1);
   const [trajectory, setTrajectory] = useState([]); // Stores only valid recorded data (adjusted for map)
   const [originalTrajectoryData, setOriginalTrajectoryData] = useState([]); // Stores unmodified original data
   const [missingHours, setMissingHours] = useState(new Set()); // Stores missing hour timestamps
   const [balloonDataLog, setBalloonDataLog] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
 
-  const fetchData = async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/api/balloons/history");
-      if (response.data) {
-        setBalloons(response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching balloon data:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   useEffect(() => {
     extractBalloonTrajectory();
-  }, [balloonId]);
+  }, [balloonId, balloonData]);
+
+  useEffect(() => {
+    if (initialBalloonId) {
+      setBalloonId(initialBalloonId);
+    }
+  }, [initialBalloonId]);
 
   // --------------------------------------------------------------------------------
   
   const extractBalloonTrajectory = () => {
-    if (!balloonId || isNaN(balloonId) || balloonId < 1 || balloonId > 1000) return;
+    if (!balloonData || !balloonId || isNaN(balloonId) || balloonId < 1 || balloonId > 1000) return;
   
     const recordedTrajectory = [];
     const originalData = []; // Stores original, unmodified data
@@ -75,13 +64,13 @@ const BalloonTracker = () => {
     let lastValidLongitude = null; // Track previous longitude
   
     for (let hour = 0; hour < 24; hour++) {
-      const hourData = balloons[hour] || [];
-      const balloonData = hourData[balloonId - 1];
+      const hourData = balloonData[hour] || [];
+      const balloon = hourData[balloonId - 1];
 
-      if (balloonData && !balloonData.includes(null)) {
-        let lat = balloonData[0];
-        let lon = balloonData[1];
-        let alt = balloonData[2];
+      if (balloon && !balloon.includes(null)) {
+        let lat = balloon[0];
+        let lon = balloon[1];
+        let alt = balloon[2];
 
         // Store original data without any modification
         originalData.push({
