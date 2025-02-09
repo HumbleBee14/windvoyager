@@ -37,7 +37,7 @@ const AutoZoom = ({ trajectory }) => {
 const BalloonTracker = () => {
   const [balloons, setBalloons] = useState({});
   const [balloonId, setBalloonId] = useState(1);
-  const [trajectory, setTrajectory] = useState([]); // Stores only valid recorded data
+  const [trajectory, setTrajectory] = useState([]); // Stores only valid recorded data (adjusted for map)
   const [originalTrajectoryData, setOriginalTrajectoryData] = useState([]); // Stores unmodified original data
   const [missingHours, setMissingHours] = useState(new Set()); // Stores missing hour timestamps
   const [balloonDataLog, setBalloonDataLog] = useState([]);
@@ -83,7 +83,7 @@ const BalloonTracker = () => {
         let lon = balloonData[1];
         let alt = balloonData[2];
 
-        // Store **original data** without any modification
+        // Store original data without any modification
         originalData.push({
           position: [lat, lon],
           altitude: alt,
@@ -175,17 +175,22 @@ const BalloonTracker = () => {
         <AutoZoom trajectory={trajectory} /> {/* Auto-adjust zoom when trajectory updates */}
         <Polyline positions={trajectory.map((p) => p.position)} color="red" />
 
-        {trajectory.map((balloon, index) => (
-          <Marker key={index} position={balloon.position} icon={blueMarker}>
-            <Popup>
-              <strong>Balloon #:</strong> {balloonId} <br />
-              <strong>Hour:</strong> {balloon.hour}H ago <br />
-              <strong>Latitude:</strong> {balloon.position[0].toFixed(5)}° <br />
-              <strong>Longitude:</strong> {balloon.position[1].toFixed(5)}° <br />
-              <strong>Altitude:</strong> {balloon.altitude.toFixed(2)} km
-            </Popup>
-          </Marker>
-        ))}
+        {trajectory.map((balloon, index) => {
+          // Find the corresponding original value
+          const originalBalloon = originalTrajectoryData.find((b) => b.hour === balloon.hour);
+
+          return (
+            <Marker key={index} position={balloon.position} icon={blueMarker}>
+              <Popup>
+                <strong>Balloon #:</strong> {balloonId} <br />
+                <strong>Hour:</strong> {balloon.hour}H ago <br />
+                <strong>Latitude:</strong> {originalBalloon ? originalBalloon.position[0].toFixed(5) : balloon.position[0].toFixed(5)}° <br />
+                <strong>Longitude:</strong> {originalBalloon ? originalBalloon.position[1].toFixed(5) : balloon.position[1].toFixed(5)}° <br />
+                <strong>Altitude:</strong> {originalBalloon ? originalBalloon.altitude.toFixed(2) : balloon.altitude.toFixed(2)} km
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
 
       {showPopup && <BalloonDataPopup data={balloonDataLog} balloonId={balloonId} onClose={() => setShowPopup(false)} />}
