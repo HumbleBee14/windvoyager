@@ -123,6 +123,7 @@ const ConstellationView = ({ balloonData, refreshData, trackBalloon }) => {
   
       {/* Centered Map Container */}
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100vw", height: "85vh" }}>
+        
         <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={2}>
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

@@ -4,6 +4,7 @@ import BalloonDataPopup from "./BalloonDataPopup";
 import "./BalloonDataPopup.css";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-arrowheads";
 
 const redMarker = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
@@ -33,6 +34,40 @@ const AutoZoom = ({ trajectory }) => {
   return null;
 };
 
+// Arrowhead Component
+const AddArrowheads = ({ trajectory }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (trajectory.length > 1) {
+      const reversedTrajectory = [...trajectory].reverse(); // Fix: Reverse order
+      const polyline = L.polyline(reversedTrajectory.map(p => p.position), { 
+        color: "red", 
+        weight: 3, 
+        dashArray: "6, 6"
+      });
+
+      polyline.arrowheads({
+        size: "15px",
+        frequency: "100px",
+        color: "red"
+      });
+
+      polyline.addTo(map);
+
+      return () => {
+        map.removeLayer(polyline); // Clean up previous layers
+      };
+    }
+  }, [trajectory, map]);
+
+  return null;
+};
+
+
+
+// -------------------------------------------------------
+
 const BalloonTracker = ({balloonData, initialBalloonId }) => {
   const [balloonId, setBalloonId] = useState(initialBalloonId  || 1);
   const [trajectory, setTrajectory] = useState([]); // Stores only valid recorded data (adjusted for map)
@@ -50,6 +85,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
       setBalloonId(initialBalloonId);
     }
   }, [initialBalloonId]);
+
 
   // --------------------------------------------------------------------------------
   
@@ -124,7 +160,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100vw" }}>
 
-      {/* Control Panel (Balloon Selection & Logs) */}
+      {/* Control Panel */}
       <div style={{ display: "flex", justifyContent: "space-between", width: "90%", padding: "10px 20px", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingLeft: "15px", flexDirection: "column" }}> 
           
@@ -166,7 +202,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
             fontSize: "14px",
             fontWeight: "bold",
             textAlign: "center",
-            margin: "0 auto" // Center the text properly
+            margin: "0 auto"
           }}>
             <strong>Data Gaps (Hours Ago): </strong> {Array.from(missingHours).join(", ")}
           </div>
@@ -177,12 +213,14 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
         </button>
       </div>
 
-      {/* Map Container Centered */}
+      {/* Map Container */}
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100vw", height: "85vh" }}>
+
         <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={3}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           <AutoZoom trajectory={trajectory} /> {/* Auto-adjust zoom when trajectory updates */}
-          <Polyline positions={trajectory.map((p) => p.position)} color="red" />
+          {/* <Polyline positions={trajectory.map((p) => p.position)} color="red" /> */}
+          <AddArrowheads trajectory={trajectory} />
 
           {trajectory.map((balloon, index) => {
             // Find the corresponding original value
@@ -201,6 +239,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
             );
           })}
         </MapContainer>
+
       </div>
 
       {showPopup && <BalloonDataPopup data={balloonDataLog} balloonId={balloonId} onClose={() => setShowPopup(false)} />}
