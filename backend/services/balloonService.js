@@ -21,6 +21,8 @@ function cleanBalloonData(data, hoursAgo) {
     }
   }
 
+  // -------------------------------------------------
+
   if (!Array.isArray(data)) {
     console.warn(`Unexpected data format at ${hoursAgo}H - Ignoring dataset.`);
     return [];
@@ -30,11 +32,16 @@ function cleanBalloonData(data, hoursAgo) {
   if (data.length > 0 && !Array.isArray(data[0])) {
     data = [data];
   }
+  // -------------------------------------------------
 
   // now we will replace invalid records with `[NaN]`
   const cleanedData = data.map((record) => {
     const isValid = record.every((value) => value !== null && !isNaN(value));
-    return isValid ? record : [NaN];
+
+    // NEW BugFix: If valid, but the record is (0,0,0), treat it as missing (null)
+    const isZeroCoordinates = record.length === 3 && record[0] === 0 && record[1] === 0 && record[2] === 0;
+
+    return isValid && !isZeroCoordinates ? record : [NaN];
   });
 
   console.log(`Hour ${hoursAgo}: Cleaned dataset contains ${cleanedData.length} records.`);
@@ -62,6 +69,8 @@ async function fetchLast24HoursData() {
   for (let i = 0; i < 24; i++) {
     fetchPromises.push(fetchBalloonData(i));
   }
+
+  // fetchPromises.push(fetchBalloonData(17)); // Testing
 
   const results = await Promise.all(fetchPromises);
   results.forEach((data, index) => {
