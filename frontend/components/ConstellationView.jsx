@@ -87,7 +87,7 @@ const ConstellationView = () => {
     return null;
   };
   
-  // ---------------------------------------------------------------------
+  // ---------------------------------------------
 
   const selectedData = getSelectedData();
 
@@ -97,63 +97,91 @@ const ConstellationView = () => {
     setValidBalloonCount(balloons[hour]?.filter(b => b.length > 1).length || 0);
   };
 
+  // --------------------------------------------------------------------------------------------
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "15px", marginBottom: "10px" }}>
-        <label>Select Hourly Snapshot: </label>
-        <select onChange={handleSelectionChange}>
-          <option value="0">Current</option>
-          {[...Array(23).keys()].map((h) => (
-            <option key={h + 1} value={h + 1}>{h + 1}H ago</option>
-          ))}
-        </select>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100vw" }}>
+      
+      {/* Control Panel (Dropdown & Button Section) */}
+      <div style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "space-between",
+          width: "90%", 
+          marginBottom: "15px",
+          padding: "0 20px"
+      }}>
 
-        <span style={{ fontWeight: "bold" }}>Valid Balloons (Received): {validBalloonCount}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <label style={{ fontWeight: "bold" }}>Select Hourly Snapshot:</label>
+          <select onChange={handleSelectionChange} style={{ padding: "6px 2px", fontSize: "14px" }}>
+            <option value="0">Current</option>
+            {[...Array(23).keys()].map((h) => (
+              <option key={h + 1} value={h + 1}>{h + 1}H ago</option>
+            ))}
+          </select>
+        </div>
 
-        <button onClick={fetchData} style={{ padding: "5px 10px", cursor: "pointer" }}>
-          Fetch Fresh Records
+        <div style={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
+          <span style={{ fontWeight: "bold", textAlign: "center" }}>
+            Active Balloons: <span style={{ color: "limegreen" }}>{validBalloonCount}</span>
+          </span>
+        </div>
+
+        <button onClick={fetchData} style={{ padding: "6px 12px", cursor: "pointer", fontWeight: "bold" }}>
+          Refresh Data
         </button>
+
       </div>
 
-      <MapContainer center={[20, 0]} zoom={2} style={{ height: "85vh", width: "90vw" }}>
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        />
-        {selectedData.map((balloon, index) => {
-          let isMissing = balloon.length <= 1;
-          let markerData = balloon;
-          let source = "current";
-          let refHour = null;
 
-          if (isMissing) {
-            const replacement = findValidPosition(index, selectedHour);
-            if (replacement) {
-              markerData = replacement.position;
-              source = replacement.source;
-              refHour = replacement.refHour;
+  
+      {/* Centered Map Container */}
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100vw", height: "85vh" }}>
+        <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={2}>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          />
+  
+          {selectedData.map((balloon, index) => {
+            let isMissing = balloon.length <= 1;
+            let markerData = balloon;
+            let source = "current";
+            let refHour = null;
+  
+            if (isMissing) {
+              const replacement = findValidPosition(index, selectedHour);
+              if (replacement) {
+                markerData = replacement.position;
+                source = replacement.source;
+                refHour = replacement.refHour;
+              }
             }
-          }
-
-          return (
-            <Marker key={index} position={[markerData[0], markerData[1]]} icon={isMissing ? redMarker : blueMarker}>
-              <Popup>
-                <strong>Balloon #: </strong> {index + 1} <br />
-                <strong>Latitude:</strong> {markerData[0]?.toFixed(5) ?? "Unknown"}° <br />
-                <strong>Longitude:</strong> {markerData[1]?.toFixed(5) ?? "Unknown"}° <br />
-                <strong>Altitude:</strong> {markerData[2]?.toFixed(2) ?? "Unknown"} km <br />
-                {isMissing && (
-                  <span style={{ color: "red" }}>
-                    Data Missing at {selectedHour}H → Using {source === "past" ? "Past" : "Future"} Value from {refHour}H
-                  </span>
-                )}
-              </Popup>
-            </Marker>
-          );
-        })}
-      </MapContainer>
+  
+            return (
+              <Marker key={index} position={[markerData[0], markerData[1]]} icon={isMissing ? redMarker : blueMarker}>
+                <Popup>
+                  <strong>Balloon #: </strong> {index + 1} <br />
+                  <strong>Latitude:</strong> {markerData[0]?.toFixed(5) ?? "Unknown"}° <br />
+                  <strong>Longitude:</strong> {markerData[1]?.toFixed(5) ?? "Unknown"}° <br />
+                  <strong>Altitude:</strong> {markerData[2]?.toFixed(2) ?? "Unknown"} km <br />
+                  {isMissing && (
+                    <span style={{ color: "red" }}>
+                      Data Missing at {selectedHour}H → Using {source === "past" 
+                        ? `Past data from ${refHour}h ago` 
+                        : `Future data from ${Math.abs(refHour - selectedHour)}h ahead`}
+                    </span>
+                  )}
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MapContainer>
+      </div>
     </div>
   );
+  
 };
 
 export default ConstellationView;

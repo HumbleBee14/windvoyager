@@ -91,7 +91,7 @@ const BalloonTracker = () => {
           missing: false
         });
 
-        balloonLog.push({ hour, lat, lon, alt, type: "Recorded" });  // NOTE: Importatn to keep it here, to keep log data original
+        balloonLog.push({ hour, lat, lon, alt, type: "Recorded" });   // NOTE: Importatn to keep it here, to keep log data original
 
         // If there's a previous point, check for sudden longitude wraparound
         if (lastValidLongitude !== null) {
@@ -133,66 +133,86 @@ const BalloonTracker = () => {
   // --------------------------------------------------------------------------------
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100vw" }}>
 
-      <div style={{ display: "flex", justifyContent: "space-between", width: "100%", padding: "10px 20px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-          <label>Track Balloon #: </label>
-          <input
-            type="number"
-            min="1"
-            max="1000"
-            value={balloonId}
-            onChange={(e) => setBalloonId(parseInt(e.target.value, 10) || 1)}
-            style={{ width: "60px", textAlign: "center" }}
-          />
-          <button onClick={extractBalloonTrajectory} style={{ padding: "5px 10px", cursor: "pointer" }}>
-            Track Balloon
-          </button>
-        </div>
+      {/* Control Panel (Balloon Selection & Logs) */}
+      <div style={{ display: "flex", justifyContent: "space-between", width: "90%", padding: "10px 20px", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingLeft: "15px", flexDirection: "column" }}> 
+          
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <label style={{ fontWeight: "bold" }}>Track Balloon #: </label>
+            <input
+              type="number"
+              min="1"
+              max="1000"
+              value={balloonId}
+              onChange={(e) => {
+                const value = parseInt(e.target.value, 10) || 1;
+                setBalloonId(value);
+              }}
+              style={{ width: "60px", textAlign: "center" }}
+            />
+            <button onClick={extractBalloonTrajectory} style={{ padding: "5px 10px", cursor: "pointer" }}>
+              Track
+            </button>
+          </div>
+
+          {/* Warning message */}
+          {balloonId > 1000 && (
+            <span style={{ color: "red", fontSize: "14px", fontWeight: "bold", marginTop: "5px" }}>
+              ⚠ Balloon ID cannot be more than 1000!
+            </span>
+          )}
+      </div>
+
 
         {/* Missing Data Hours Display */}
         {missingHours.size > 0 && (
           <div style={{
-            marginTop: "10px",
             padding: "10px",
             background: "#222",
             color: "white",
             borderRadius: "8px",
             width: "fit-content",
-            fontSize: "14px"
+            fontSize: "14px",
+            fontWeight: "bold",
+            textAlign: "center",
+            margin: "0 auto" // Center the text properly
           }}>
-            <strong>Missing Data Hours:</strong> {Array.from(missingHours).join(", ")}
+            <strong>Data Gaps (Hours Ago): </strong> {Array.from(missingHours).join(", ")}
           </div>
         )}
 
         <button onClick={() => setShowPopup(true)} style={{ padding: "5px 15px", cursor: "pointer", background: "#222", color: "#fff", borderRadius: "5px" }}>
-          Show Data Log 📊
+          Data Log 📊
         </button>
       </div>
 
-      <MapContainer center={[20, 0]} zoom={3} style={{ height: "85vh", width: "90vw" }}>
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <AutoZoom trajectory={trajectory} /> {/* Auto-adjust zoom when trajectory updates */}
-        <Polyline positions={trajectory.map((p) => p.position)} color="red" />
+      {/* Map Container Centered */}
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100vw", height: "85vh" }}>
+        <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={3}>
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <AutoZoom trajectory={trajectory} /> {/* Auto-adjust zoom when trajectory updates */}
+          <Polyline positions={trajectory.map((p) => p.position)} color="red" />
 
-        {trajectory.map((balloon, index) => {
-          // Find the corresponding original value
-          const originalBalloon = originalTrajectoryData.find((b) => b.hour === balloon.hour);
+          {trajectory.map((balloon, index) => {
+            // Find the corresponding original value
+            const originalBalloon = originalTrajectoryData.find((b) => b.hour === balloon.hour);
 
-          return (
-            <Marker key={index} position={balloon.position} icon={blueMarker}>
-              <Popup>
-                <strong>Balloon #:</strong> {balloonId} <br />
-                <strong>Hour:</strong> {balloon.hour}H ago <br />
-                <strong>Latitude:</strong> {originalBalloon ? originalBalloon.position[0].toFixed(5) : balloon.position[0].toFixed(5)}° <br />
-                <strong>Longitude:</strong> {originalBalloon ? originalBalloon.position[1].toFixed(5) : balloon.position[1].toFixed(5)}° <br />
-                <strong>Altitude:</strong> {originalBalloon ? originalBalloon.altitude.toFixed(2) : balloon.altitude.toFixed(2)} km
-              </Popup>
-            </Marker>
-          );
-        })}
-      </MapContainer>
+            return (
+              <Marker key={index} position={balloon.position} icon={blueMarker}>
+                <Popup>
+                  <strong>Balloon #:</strong> {balloonId} <br />
+                  <strong>Hour:</strong> {balloon.hour}H ago <br />
+                  <strong>Latitude:</strong> {originalBalloon ? originalBalloon.position[0].toFixed(5) : balloon.position[0].toFixed(5)}° <br />
+                  <strong>Longitude:</strong> {originalBalloon ? originalBalloon.position[1].toFixed(5) : balloon.position[1].toFixed(5)}° <br />
+                  <strong>Altitude:</strong> {originalBalloon ? originalBalloon.altitude.toFixed(2) : balloon.altitude.toFixed(2)} km
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MapContainer>
+      </div>
 
       {showPopup && <BalloonDataPopup data={balloonDataLog} balloonId={balloonId} onClose={() => setShowPopup(false)} />}
     </div>
