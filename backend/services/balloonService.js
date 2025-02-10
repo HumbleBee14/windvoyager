@@ -1,7 +1,6 @@
 const axios = require("axios");
 const { cleanBalloonData } = require("../utils/dataCleaner");
-const { calculateDistance } = require("../utils/haversine");
-const { calculateWindSpeedAndDirection } = require("../utils/windCalculator");
+const { computeBalloonInsights } = require("../utils/insightsCalculator");
 
 const BASE_URL = "https://a.windbornesystems.com/treasure/";  // TODO: We can fetch this from .env later
 
@@ -63,56 +62,17 @@ function getBalloonTrajectory(balloonData, balloonId) {
   return trajectory;
 }
 
-/**
-* Compute all insights for a single balloon.
-*/
-function computeBalloonInsights(balloonData, balloonId) {
+
+// Fetch insights for a given balloon.
+async function getBalloonInsights(balloonId) {
+  const balloonData = await fetchLast24HoursData();
   const trajectory = getBalloonTrajectory(balloonData, balloonId);
-
-  if (trajectory.length < 2) {
-      return { error: "Not enough data points to compute insights." };
-  }
-
-  let totalDistance = 0;
-  let totalDuration = 0;
-  let windProfiles = [];
-  let missingData = [];
-
-  for (let i = 1; i < trajectory.length; i++) {
-      const prev = trajectory[i - 1];
-      const curr = trajectory[i];
-
-      const distance = calculateDistance(prev.latitude, prev.longitude, curr.latitude, curr.longitude);
-      totalDistance += distance;
-
-      // Compute wind speed and direction
-      const windData = calculateWindSpeedAndDirection(
-          prev.latitude, prev.longitude, curr.latitude, curr.longitude, curr.hour - prev.hour
-      );
-
-      windProfiles.push({ hour: curr.hour, ...windData });
-
-      // Check missing data (if there is a big time gap)
-      if (curr.hour - prev.hour > 1) {
-          missingData.push(curr.hour);
-      }
-
-      totalDuration += (curr.hour - prev.hour);
-  }
-
-  const avgSpeed = totalDistance / totalDuration;
-
-  return {
-      balloonId,
-      totalDistance: totalDistance.toFixed(2) + " km",
-      avgSpeed: avgSpeed.toFixed(2) + " km/h",
-      windProfiles,
-      missingData,
-      totalDuration: totalDuration + " hours"
-  };
+  
+  return computeBalloonInsights(trajectory);
 }
+
 
 
 // -------------------------------------------------------------
 
-module.exports = { fetchBalloonData, fetchLast24HoursData, computeBalloonInsights };
+module.exports = { fetchBalloonData, fetchLast24HoursData, getBalloonTrajectory, getBalloonInsights };

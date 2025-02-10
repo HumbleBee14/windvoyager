@@ -11,10 +11,8 @@ function calculateWindSpeedAndDirection(lat1, lon1, lat2, lon2, hours) {
     const point1 = turf.point([lon1, lat1]);
     const point2 = turf.point([lon2, lat2]);
 
-    // Calculate distance (km)
     const distance = turf.distance(point1, point2, { units: 'kilometers' });
 
-    // Convert km to m/s
     const speed = (distance * 1000) / (hours * 3600); // Convert km/hr to m/s
 
     // Compute bearing (direction in degrees)
