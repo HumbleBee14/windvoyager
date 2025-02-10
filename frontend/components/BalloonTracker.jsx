@@ -78,6 +78,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
   const [missingHours, setMissingHours] = useState(new Set()); // Stores missing hour timestamps
   const [balloonDataLog, setBalloonDataLog] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
+  const [windData, setWindData] = useState(null);
 
   const layerControlRef = useRef();
 
@@ -192,6 +193,30 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
     console.log(`Missing Hours: ${Array.from(missingTimestamps).join(", ")}`);
   };
 
+  // -------------------------------------------------------------------------------
+  const requestWindData = async () => {
+      if (!balloonId || trajectory.length === 0) return;
+
+      console.log(`Requesting wind data for Balloon #${balloonId}...`);
+
+      try {
+          const response = await fetch("/api/generate-wind", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ balloonId, trajectory })
+          });
+
+          if (!response.ok) throw new Error("Failed to generate wind data");
+
+          const windJson = await response.json();
+          console.log("Received wind data:", windJson);
+          setWindData(windJson); // Update state to display wind overlay
+      } catch (error) {
+          console.error("Error fetching wind data:", error);
+      }
+  };
+
+
   // --------------------------------------------------------------------------------
   // --------------------------------------------------------------------------------
 
@@ -255,39 +280,39 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
       
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100vw", height: "85vh" }}>
 
-      <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={3}>
+        <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={3}>
 
-      <LayersControl position="topright" ref={layerControlRef}>
+          <LayersControl position="topright" ref={layerControlRef}>
 
-        <LayersControl.Overlay name="Satellite">
-          <TileLayer url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
-        </LayersControl.Overlay>
+            <LayersControl.Overlay name="Satellite">
+              <TileLayer url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
+            </LayersControl.Overlay>
 
-        <LeafletVelocity ref={layerControlRef} />
+            <LeafletVelocity ref={layerControlRef} />
 
-      </LayersControl>
+          </LayersControl>
 
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <AutoZoom trajectory={trajectory} /> {/* Auto-adjust zoom when trajectory updates */}
             {/* <Polyline positions={trajectory.map((p) => p.position)} color="red" /> */}
             <AddArrowheads trajectory={trajectory} />
 
-            {trajectory.map((balloon, index) => {
-              // Find the corresponding original value
-              const originalBalloon = originalTrajectoryData.find((b) => b.hour === balloon.hour);
+              {trajectory.map((balloon, index) => {
+                // Find the corresponding original value
+                const originalBalloon = originalTrajectoryData.find((b) => b.hour === balloon.hour);
 
-              return (
-                <Marker key={index} position={balloon.position} icon={blueMarker}>
-                  <Popup>
-                    <strong>Balloon #:</strong> {balloonId} <br />
-                    <strong>Hour:</strong> {balloon.hour}H ago <br />
-                    <strong>Latitude:</strong> {originalBalloon ? originalBalloon.position[0].toFixed(5) : balloon.position[0].toFixed(5)}° <br />
-                    <strong>Longitude:</strong> {originalBalloon ? originalBalloon.position[1].toFixed(5) : balloon.position[1].toFixed(5)}° <br />
-                    <strong>Altitude:</strong> {originalBalloon ? originalBalloon.altitude.toFixed(2) : balloon.altitude.toFixed(2)} km
-                  </Popup>
-                </Marker>
-              );
-            })}
+                return (
+                  <Marker key={index} position={balloon.position} icon={blueMarker}>
+                    <Popup>
+                      <strong>Balloon #:</strong> {balloonId} <br />
+                      <strong>Hour:</strong> {balloon.hour}H ago <br />
+                      <strong>Latitude:</strong> {originalBalloon ? originalBalloon.position[0].toFixed(5) : balloon.position[0].toFixed(5)}° <br />
+                      <strong>Longitude:</strong> {originalBalloon ? originalBalloon.position[1].toFixed(5) : balloon.position[1].toFixed(5)}° <br />
+                      <strong>Altitude:</strong> {originalBalloon ? originalBalloon.altitude.toFixed(2) : balloon.altitude.toFixed(2)} km
+                    </Popup>
+                  </Marker>
+                );
+              })}
 
         </MapContainer>
 
