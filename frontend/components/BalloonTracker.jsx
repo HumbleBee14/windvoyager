@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from "react-leaflet";
+import React, { useEffect, useState, useRef } from "react";
+import { MapContainer, TileLayer, Marker, Polyline, Popup, LayersControl, useMap } from "react-leaflet";
 import BalloonDataPopup from "./BalloonDataPopup";
+import LeafletVelocity from "./LeafletVelocity";
 import { calculateWindSpeedAndDirection, getCompassDirection } from "../utils/windUtils";
 import L from "leaflet";
 import "./BalloonDataPopup.css";
 import "leaflet/dist/leaflet.css";
+
+// --------------------------------------------------------------------------
 
 const redMarker = new L.Icon({
   iconUrl: "/icons/marker-icon-red.png",
@@ -65,8 +68,8 @@ const AddArrowheads = ({ trajectory }) => {
 };
 
 
-
-// -------------------------------------------------------
+// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
 
 const BalloonTracker = ({balloonData, initialBalloonId }) => {
   const [balloonId, setBalloonId] = useState(initialBalloonId  || 1);
@@ -75,6 +78,8 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
   const [missingHours, setMissingHours] = useState(new Set()); // Stores missing hour timestamps
   const [balloonDataLog, setBalloonDataLog] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
+
+  const layerControlRef = useRef();
 
   useEffect(() => {
     extractBalloonTrajectory();
@@ -87,7 +92,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
   }, [initialBalloonId]);
 
 
-  // --------------------------------------------------------------------------------
+  // ------------------------------------------------------
   
   const extractBalloonTrajectory = () => {
     if (!balloonData || !balloonId || isNaN(balloonId) || balloonId < 1 || balloonId > 1000) return;
@@ -188,6 +193,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
   };
 
   // --------------------------------------------------------------------------------
+  // --------------------------------------------------------------------------------
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100vw" }}>
@@ -245,10 +251,21 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
         </button>
       </div>
 
-      {/* Map Container */}
+      {/* _____________________________________ Map Container _____________________________________*/}
+      
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100vw", height: "85vh" }}>
 
       <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={3}>
+
+      <LayersControl position="topright" ref={layerControlRef}>
+
+        <LayersControl.Overlay name="Satellite">
+          <TileLayer url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
+        </LayersControl.Overlay>
+
+        <LeafletVelocity ref={layerControlRef} />
+
+      </LayersControl>
 
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <AutoZoom trajectory={trajectory} /> {/* Auto-adjust zoom when trajectory updates */}

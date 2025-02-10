@@ -16,13 +16,13 @@
     "d3": "^7.9.0",
     "leaflet": "^1.9.4",
     "leaflet-arrowheads": "^1.4.0",
+    "leaflet-velocity": "^2.1.4",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^18.3.1",
     "react-draggable": "^4.4.6",
     "react-leaflet": "^4.2.1",
-    "three": "^0.173.0",
-    "turf": "^3.0.14"
+    "three": "^0.173.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
