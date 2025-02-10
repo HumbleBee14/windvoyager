@@ -40,7 +40,7 @@ function cleanBalloonData(data, hoursAgo) {
       return isValid && !isZeroCoordinates ? record : [NaN];
     });
   
-    console.log(`Hour ${hoursAgo}: Cleaned dataset contains ${cleanedData.length} records.`);
+    // console.log(`Hour ${hoursAgo}: Cleaned dataset contains ${cleanedData.length} records.`);
     return cleanedData;
   }
 
