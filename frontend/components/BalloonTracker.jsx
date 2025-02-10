@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from "react-leaflet";
 import BalloonDataPopup from "./BalloonDataPopup";
-import "./BalloonDataPopup.css";
+import { calculateWindSpeedAndDirection, getCompassDirection } from "../utils/windUtils";
 import L from "leaflet";
+import "./BalloonDataPopup.css";
 import "leaflet/dist/leaflet.css";
 
 const redMarker = new L.Icon({
@@ -96,9 +97,10 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
     const missingTimestamps = new Set();
     const balloonLog = [];
   
-    let lastValidLongitude = null; // Track previous longitude
+    let lastValidLatitude = null, lastValidLongitude = null, lastValidAltitude = null, lastValidHour = null;
+
   
-    for (let hour = 0; hour < 24; hour++) {
+    for (let hour = 23; hour >= 0; hour--) {
       const hourData = balloonData[hour] || [];
       const balloon = hourData[balloonId - 1];
 
@@ -115,7 +117,30 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
           missing: false
         });
 
-        balloonLog.push({ hour, lat, lon, alt, type: "Recorded" });   // NOTE: Importatn to keep it here, to keep log data original
+        let windData = { speed: "-", direction: "-", compass: "-" };
+
+        // Compute wind profile ONLY if a valid previous hour exists
+        if (lastValidHour !== null) {
+            windData = calculateWindSpeedAndDirection(
+                lastValidLatitude, lastValidLongitude, lat, lon, hour, lastValidHour
+            );
+
+            if (windData.direction !== "-") {
+              windData.compass = getCompassDirection(parseFloat(windData.direction));
+          }
+        }
+
+        // balloonLog.push({ hour, lat, lon, alt, type: "Recorded" });   // NOTE: Importatn to keep it here, to keep log data original
+        balloonLog.push({
+            hour,
+            lat,
+            lon,
+            alt,
+            windSpeed: windData.speed,
+            windDirection: windData.direction,
+            windCompass: windData.compass,
+            type: "Recorded"
+        });
 
         // If there's a previous point, check for sudden longitude wraparound
         if (lastValidLongitude !== null) {
@@ -137,20 +162,28 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
           position: [lat, lon],
           altitude: alt,
           hour,
+          windSpeed: windData.speed,
+          windDirection: windData.direction,
           missing: false
         });
 
+        // Update last valid data for next iterations
+        lastValidLatitude = lat;
+        lastValidLongitude = lon;
+        lastValidAltitude = alt;
+        lastValidHour = hour;
+
       } else {
         // Track missing hour
-        balloonLog.push({ hour, lat: "Missing", lon: "Missing", alt: "Missing", type: "Missing" });
+        balloonLog.push({ hour, lat: "-", lon: "-", alt: "-", windSpeed: "-", windDirection: "-", type: "Missing" });
         missingTimestamps.add(hour);
       }
     }
 
-    setTrajectory(recordedTrajectory);
-    setOriginalTrajectoryData(originalData);
-    setBalloonDataLog(balloonLog);
-    setMissingHours(missingTimestamps);
+    setTrajectory(recordedTrajectory.reverse());
+    setOriginalTrajectoryData(originalData.reverse());
+    setBalloonDataLog(balloonLog.reverse());
+    setMissingHours(new Set([...missingTimestamps].reverse()));
     console.log(`Missing Hours: ${Array.from(missingTimestamps).join(", ")}`);
   };
 
@@ -215,28 +248,30 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
       {/* Map Container */}
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100vw", height: "85vh" }}>
 
-        <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={3}>
-          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          <AutoZoom trajectory={trajectory} /> {/* Auto-adjust zoom when trajectory updates */}
-          {/* <Polyline positions={trajectory.map((p) => p.position)} color="red" /> */}
-          <AddArrowheads trajectory={trajectory} />
+      <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={3}>
 
-          {trajectory.map((balloon, index) => {
-            // Find the corresponding original value
-            const originalBalloon = originalTrajectoryData.find((b) => b.hour === balloon.hour);
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <AutoZoom trajectory={trajectory} /> {/* Auto-adjust zoom when trajectory updates */}
+            {/* <Polyline positions={trajectory.map((p) => p.position)} color="red" /> */}
+            <AddArrowheads trajectory={trajectory} />
 
-            return (
-              <Marker key={index} position={balloon.position} icon={blueMarker}>
-                <Popup>
-                  <strong>Balloon #:</strong> {balloonId} <br />
-                  <strong>Hour:</strong> {balloon.hour}H ago <br />
-                  <strong>Latitude:</strong> {originalBalloon ? originalBalloon.position[0].toFixed(5) : balloon.position[0].toFixed(5)}° <br />
-                  <strong>Longitude:</strong> {originalBalloon ? originalBalloon.position[1].toFixed(5) : balloon.position[1].toFixed(5)}° <br />
-                  <strong>Altitude:</strong> {originalBalloon ? originalBalloon.altitude.toFixed(2) : balloon.altitude.toFixed(2)} km
-                </Popup>
-              </Marker>
-            );
-          })}
+            {trajectory.map((balloon, index) => {
+              // Find the corresponding original value
+              const originalBalloon = originalTrajectoryData.find((b) => b.hour === balloon.hour);
+
+              return (
+                <Marker key={index} position={balloon.position} icon={blueMarker}>
+                  <Popup>
+                    <strong>Balloon #:</strong> {balloonId} <br />
+                    <strong>Hour:</strong> {balloon.hour}H ago <br />
+                    <strong>Latitude:</strong> {originalBalloon ? originalBalloon.position[0].toFixed(5) : balloon.position[0].toFixed(5)}° <br />
+                    <strong>Longitude:</strong> {originalBalloon ? originalBalloon.position[1].toFixed(5) : balloon.position[1].toFixed(5)}° <br />
+                    <strong>Altitude:</strong> {originalBalloon ? originalBalloon.altitude.toFixed(2) : balloon.altitude.toFixed(2)} km
+                  </Popup>
+                </Marker>
+              );
+            })}
+
         </MapContainer>
 
       </div>

@@ -24,7 +24,7 @@
   background: transparent;
   color: #FFD700;
   border: none;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: bold;
 }
 
@@ -38,13 +38,13 @@
 .popup-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 5px;
+  /* margin-top: 1px; */
 }
 
 .popup-table th {
   background: #444;
   color: #FFD700;
-  padding: 8px;
+  padding: 4px;
 }
 
 .popup-table td {

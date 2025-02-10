@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import Draggable from "react-draggable";
 
 const BalloonDataPopup = ({ data, balloonId, onClose }) => {
@@ -30,11 +30,14 @@ const BalloonDataPopup = ({ data, balloonId, onClose }) => {
         <table className="popup-table">
           <thead>
             <tr>
-              <th>Hour</th>
-              <th>Latitude</th>
-              <th>Longitude</th>
-              <th>Altitude</th>
-              <th>Type</th>
+            <th>Hour</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>Altitude</th>
+            <th>Wind Speed (m/s)</th>
+            <th>Wind Direction (°)</th>
+            <th>Compass</th>
+            {/* <th>Type</th> */}
             </tr>
           </thead>
 
@@ -42,12 +45,13 @@ const BalloonDataPopup = ({ data, balloonId, onClose }) => {
             {data.map((entry, index) => (
               <tr key={index} className={entry.type.includes("Missing") ? "missing-row" : "recorded-row"}>
                 <td>{entry.hour}H</td>
-                <td>{entry.lat !== "Missing" ? entry.lat.toFixed(5) : "-"}</td>
-                <td>{entry.lon !== "Missing" ? entry.lon.toFixed(5) : "-"}</td>
-                <td>{entry.alt !== "Missing" ? entry.alt.toFixed(2) : "-"}</td>
-                <td className={entry.type.includes("Missing") ? "missing-text" : "recorded-text"}>
-                  {entry.type}
-                </td>
+                <td>{entry.lat !== "-" ? entry.lat.toFixed(5) : "-"}</td>
+                <td>{entry.lon !== "-" ? entry.lon.toFixed(5) : "-"}</td>
+                <td>{entry.alt !== "-" ? entry.alt.toFixed(2) : "-"}</td>
+                <td>{entry.windSpeed !== "-" ? `${entry.windSpeed}` : "-"}</td>
+                <td>{entry.windDirection !== "-" ? `${entry.windDirection}`+ "°" : "-"}</td>
+                <td>{entry.windCompass !== "-" ? entry.windCompass : "-"}</td>
+                {/* <td className={entry.type.includes("Missing") ? "missing-text" : "recorded-text"}>{entry.type}</td> */}
               </tr>
             ))}
           </tbody>
