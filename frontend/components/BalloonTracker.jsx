@@ -2,8 +2,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Popup, LayersControl, useMap } from "react-leaflet";
 import BalloonDataPopup from "./BalloonDataPopup";
 import LeafletVelocity from "./LeafletVelocity";
-import { requestWindData } from "../services/balloonService";
-import { calculateWindSpeedAndDirection, getCompassDirection } from "../utils/windUtils";
+import { calculateWindSpeedAndDirection, getCompassDirection, computeScatteredWindData } from "../utils/windUtils";
+import { generateWindGrid } from "../utils/windDataUtils";
 import L from "leaflet";
 import "./BalloonDataPopup.css";
 import "leaflet/dist/leaflet.css";
@@ -70,6 +70,7 @@ const AddArrowheads = ({ trajectory }) => {
 
 
 // --------------------------------------------------------------------------
+// Main Component
 // --------------------------------------------------------------------------
 
 const BalloonTracker = ({balloonData, initialBalloonId }) => {
@@ -94,27 +95,40 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
   }, [initialBalloonId]);
 
   useEffect(() => {
-    fetchWindData();
-  }, [balloonId]);
+    processWindData();
+  }, [balloonId, originalTrajectoryData]);
+
+  // ------------------------------------------------------
+  const processWindData = () => {
+    console.log(`Processing Wind Data for Balloon #${balloonId}...`);
+
+    if (!originalTrajectoryData || originalTrajectoryData.length < 2) {
+      console.warn("Not enough trajectory data to compute wind vectors.");
+      // setWindData(null);
+      return;
+    }
+
+    // Generate scattered wind data (u, v components)
+    const scatteredData = computeScatteredWindData(originalTrajectoryData);
+
+    if (!scatteredData || scatteredData.length === 0) {
+      console.warn("Scattered wind data is empty.");
+      setWindData(null);
+      return;
+    }
+
+    // Generate structured wind grid data
+    const windGrid = generateWindGrid(scatteredData);
+
+    console.log("Balloon Tracker Wind Grid:", windGrid);
+    console.log(Object.prototype.toString.call(windGrid));
+    console.log(windGrid.length);
+    setWindData(windGrid); // Trigger re-render
+  };
 
 
   // ------------------------------------------------------
-  const fetchWindData = async () => {
-    // if (!balloonId) balloonId = 1;
 
-    console.log(`Fetching Wind Data for Balloon #${balloonId}...`);
-
-    try {
-        const windJson = await requestWindData(balloonId);
-        if (windJson) {
-          console.log("Received wind data:", windJson);
-          setWindData({ ...windJson });  // Imp: Create a new object reference! to trigger update in map when data is downloaded
-        }
-      } catch (error) {
-          console.error("Error fetching wind data:", error);
-      }
-  };
-  
   const extractBalloonTrajectory = () => {
     if (!balloonData || !balloonId || isNaN(balloonId) || balloonId < 1 || balloonId > 1000) return;
   
@@ -148,7 +162,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
         // Compute wind profile ONLY if a valid previous hour exists
         if (lastValidHour !== null) {
             windData = calculateWindSpeedAndDirection(
-                lastValidLatitude, lastValidLongitude, lat, lon, hour, lastValidHour
+                lastValidLatitude, lastValidLongitude, lat, lon, lastValidHour, hour, lastValidAltitude, alt
             );
 
             if (windData.direction !== "-") {
@@ -210,6 +224,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
     setOriginalTrajectoryData(originalData.reverse());
     setBalloonDataLog(balloonLog.reverse());
     setMissingHours(new Set([...missingTimestamps].reverse()));
+
     console.log(`Missing Hours: ${Array.from(missingTimestamps).join(", ")}`);
   };
 
@@ -279,46 +294,47 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
         <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={3}>
 
-
-        <LayersControl position="topright" ref={layerControlRef}>
-
           {/* Standard Map (Default) */}
-          <LayersControl.BaseLayer checked name="Standard Map">
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          </LayersControl.BaseLayer>
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
 
-          {/* Satellite Layer */}
-          <LayersControl.BaseLayer name="Satellite">
-            <TileLayer url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
-          </LayersControl.BaseLayer>
+          <LayersControl position="topright" ref={layerControlRef}>
 
-          <LayersControl.Overlay name="Wind">
-              {windData && <LeafletVelocity key={JSON.stringify(windData)} ref={layerControlRef} windData={windData} />}
-          </LayersControl.Overlay>
+              <LayersControl.Overlay name="Satellite">
+                <TileLayer
+                  attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS
+              AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+                  url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                />
+              </LayersControl.Overlay>
 
-        </LayersControl>
+          </LayersControl>
 
-            {/* <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /> */}
-            <AutoZoom trajectory={trajectory} /> {/* Auto-adjust zoom when trajectory updates */}
-            {/* <Polyline positions={trajectory.map((p) => p.position)} color="red" /> */}
-            <AddArrowheads trajectory={trajectory} />
+          <LeafletVelocity windData={windData} ref={layerControlRef} />
 
-              {trajectory.map((balloon, index) => {
-                // Find the corresponding original value
-                const originalBalloon = originalTrajectoryData.find((b) => b.hour === balloon.hour);
 
-                return (
-                  <Marker key={index} position={balloon.position} icon={blueMarker}>
-                    <Popup>
-                      <strong>Balloon #:</strong> {balloonId} <br />
-                      <strong>Hour:</strong> {balloon.hour}H ago <br />
-                      <strong>Latitude:</strong> {originalBalloon ? originalBalloon.position[0].toFixed(5) : balloon.position[0].toFixed(5)}° <br />
-                      <strong>Longitude:</strong> {originalBalloon ? originalBalloon.position[1].toFixed(5) : balloon.position[1].toFixed(5)}° <br />
-                      <strong>Altitude:</strong> {originalBalloon ? originalBalloon.altitude.toFixed(2) : balloon.altitude.toFixed(2)} km
-                    </Popup>
-                  </Marker>
-                );
-              })}
+          <AutoZoom trajectory={trajectory} /> {/* Auto-adjust zoom when trajectory updates */}
+          {/* <Polyline positions={trajectory.map((p) => p.position)} color="red" /> */}
+          <AddArrowheads trajectory={trajectory} />
+
+            {trajectory.map((balloon, index) => {
+              // Find the corresponding original value
+              const originalBalloon = originalTrajectoryData.find((b) => b.hour === balloon.hour);
+
+              return (
+                <Marker key={index} position={balloon.position} icon={blueMarker}>
+                  <Popup>
+                    <strong>Balloon #:</strong> {balloonId} <br />
+                    <strong>Hour:</strong> {balloon.hour}H ago <br />
+                    <strong>Latitude:</strong> {originalBalloon ? originalBalloon.position[0].toFixed(5) : balloon.position[0].toFixed(5)}° <br />
+                    <strong>Longitude:</strong> {originalBalloon ? originalBalloon.position[1].toFixed(5) : balloon.position[1].toFixed(5)}° <br />
+                    <strong>Altitude:</strong> {originalBalloon ? originalBalloon.altitude.toFixed(2) : balloon.altitude.toFixed(2)} km
+                  </Popup>
+                </Marker>
+              );
+            })}
 
         </MapContainer>
 
