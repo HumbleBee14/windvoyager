@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Popup, LayersControl, useMap } from "react-leaflet";
 import BalloonDataPopup from "./BalloonDataPopup";
 import LeafletVelocity from "./LeafletVelocity";
+import { requestWindData } from "../services/balloonService";
 import { calculateWindSpeedAndDirection, getCompassDirection } from "../utils/windUtils";
 import L from "leaflet";
 import "./BalloonDataPopup.css";
@@ -92,8 +93,27 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
     }
   }, [initialBalloonId]);
 
+  useEffect(() => {
+    fetchWindData();
+  }, [balloonId]);
+
 
   // ------------------------------------------------------
+  const fetchWindData = async () => {
+    // if (!balloonId) balloonId = 1;
+
+    console.log(`Fetching Wind Data for Balloon #${balloonId}...`);
+
+    try {
+        const windJson = await requestWindData(balloonId);
+        if (windJson) {
+          console.log("Received wind data:", windJson);
+          setWindData({ ...windJson });  // Imp: Create a new object reference! to trigger update in map when data is downloaded
+        }
+      } catch (error) {
+          console.error("Error fetching wind data:", error);
+      }
+  };
   
   const extractBalloonTrajectory = () => {
     if (!balloonData || !balloonId || isNaN(balloonId) || balloonId < 1 || balloonId > 1000) return;
@@ -193,29 +213,6 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
     console.log(`Missing Hours: ${Array.from(missingTimestamps).join(", ")}`);
   };
 
-  // -------------------------------------------------------------------------------
-  const requestWindData = async () => {
-      if (!balloonId || trajectory.length === 0) return;
-
-      console.log(`Requesting wind data for Balloon #${balloonId}...`);
-
-      try {
-          const response = await fetch("/api/generate-wind", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ balloonId, trajectory })
-          });
-
-          if (!response.ok) throw new Error("Failed to generate wind data");
-
-          const windJson = await response.json();
-          console.log("Received wind data:", windJson);
-          setWindData(windJson); // Update state to display wind overlay
-      } catch (error) {
-          console.error("Error fetching wind data:", error);
-      }
-  };
-
 
   // --------------------------------------------------------------------------------
   // --------------------------------------------------------------------------------
@@ -282,17 +279,26 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
         <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={3}>
 
-          <LayersControl position="topright" ref={layerControlRef}>
 
-            <LayersControl.Overlay name="Satellite">
-              <TileLayer url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
-            </LayersControl.Overlay>
+        <LayersControl position="topright" ref={layerControlRef}>
 
-            <LeafletVelocity ref={layerControlRef} />
-
-          </LayersControl>
-
+          {/* Standard Map (Default) */}
+          <LayersControl.BaseLayer checked name="Standard Map">
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          </LayersControl.BaseLayer>
+
+          {/* Satellite Layer */}
+          <LayersControl.BaseLayer name="Satellite">
+            <TileLayer url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
+          </LayersControl.BaseLayer>
+
+          <LayersControl.Overlay name="Wind">
+              {windData && <LeafletVelocity key={JSON.stringify(windData)} ref={layerControlRef} windData={windData} />}
+          </LayersControl.Overlay>
+
+        </LayersControl>
+
+            {/* <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /> */}
             <AutoZoom trajectory={trajectory} /> {/* Auto-adjust zoom when trajectory updates */}
             {/* <Polyline positions={trajectory.map((p) => p.position)} color="red" /> */}
             <AddArrowheads trajectory={trajectory} />

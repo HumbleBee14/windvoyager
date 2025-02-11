@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/balloons/history";
+const API_BASE_URL = "http://localhost:5000/api/balloons";
 
 /**
  * Fetch balloon tracking data from the API.
@@ -8,10 +8,25 @@ const API_URL = "http://localhost:5000/api/balloons/history";
  */
 export const fetchBalloonData = async () => {
   try {
-    const response = await axios.get(API_URL);
+    const response = await axios.get(`${API_BASE_URL}/history`);
     return response.data;
   } catch (error) {
     console.error("Error fetching balloon data:", error);
+    return null;
+  }
+};
+
+export const requestWindData = async (balloonId) => {
+  if (!balloonId) return null;
+
+  console.log(`Requesting wind data for Balloon #${balloonId}...`);
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/generate-wind`, { balloonId });
+    console.log("Hogya download bro windata");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching wind data:", error);
     return null;
   }
 };

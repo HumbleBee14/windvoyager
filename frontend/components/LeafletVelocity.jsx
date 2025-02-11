@@ -4,10 +4,11 @@ import { forwardRef, useEffect, useState } from "react";
 import L from "leaflet";
 import { useMap } from "react-leaflet";
 
-const LeafletVelocity = forwardRef((props, ref) => {
+const LeafletVelocity = forwardRef(({windData}, ref) => {
   const map = useMap();
   const [windGlobalLayer, setWindGlobalLayer] = useState(null);
   const [windGbrLayer, setWindGbrLayer] = useState(null);
+  // const [balloonWindLayer, setBalloonWindLayer] = useState(null);
 
   useEffect(() => {
     if (!map) return;
@@ -23,7 +24,7 @@ const LeafletVelocity = forwardRef((props, ref) => {
         const layer = L.velocityLayer({
           displayValues: true,
           displayOptions: {
-            velocityType: "Global Wind",
+            velocityType: "Wind",
             position: "bottomleft",
             emptyString: "No wind data"
           },
@@ -37,7 +38,7 @@ const LeafletVelocity = forwardRef((props, ref) => {
       .catch((err) => console.error("Error loading global wind data:", err));
 
     // Load GBR Wind Data
-    fetch("/data/balloon-wind-grid.json")
+    fetch("/data/wind-gbr.json")
       .then((response) => response.json())
       .then((data) => {
         if (!mounted) return;
@@ -45,7 +46,7 @@ const LeafletVelocity = forwardRef((props, ref) => {
         const layer = L.velocityLayer({
           displayValues: true,
           displayOptions: {
-            velocityType: "GBR Wind",
+            velocityType: "Wind",
             position: "bottomleft",
             emptyString: "No wind data",
             showCardinal: true
@@ -55,7 +56,7 @@ const LeafletVelocity = forwardRef((props, ref) => {
         });
 
         setWindGbrLayer(layer);
-        if (ref.current) ref.current.addOverlay(layer, "Wind - Great Barrier Reef");
+        if (ref.current) ref.current.addOverlay(layer, "Wind");
       })
       .catch((err) => console.error("Error loading GBR wind data:", err));
 
@@ -64,11 +65,13 @@ const LeafletVelocity = forwardRef((props, ref) => {
       if (ref.current) {
         ref.current.removeOverlay(windGlobalLayer);
         ref.current.removeOverlay(windGbrLayer);
+        // ref.current.removeOverlay(balloonWindLayer);
       }
     };
   }, [map]);
 
   return null;
 });
+
 
 export default LeafletVelocity;
