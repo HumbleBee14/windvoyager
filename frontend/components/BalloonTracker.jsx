@@ -100,7 +100,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
   // ------------------------------------------------------
   const processWindData = () => {
-    console.log(`Processing Wind Data for Balloon #${balloonId}...`);
+    // console.log(`Processing Wind Data for Balloon #${balloonId}...`);
 
     if (!originalTrajectoryData || originalTrajectoryData.length < 2) {
       console.warn("Not enough trajectory data to compute wind vectors.");
@@ -120,9 +120,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
     // Generate structured wind grid data
     const windGrid = generateWindGrid(scatteredData);
 
-    console.log("Balloon Tracker Wind Grid:", windGrid);
-    console.log(Object.prototype.toString.call(windGrid));
-    console.log(windGrid.length);
+    // console.log("Balloon Tracker Wind Grid:", windGrid);
     setWindData(windGrid); // Trigger re-render
   };
 
@@ -225,7 +223,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
     setBalloonDataLog(balloonLog.reverse());
     setMissingHours(new Set([...missingTimestamps].reverse()));
 
-    console.log(`Missing Hours: ${Array.from(missingTimestamps).join(", ")}`);
+    // console.log(`Missing Hours: ${Array.from(missingTimestamps).join(", ")}`);
   };
 
 

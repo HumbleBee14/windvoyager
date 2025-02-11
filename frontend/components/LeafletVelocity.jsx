@@ -38,8 +38,10 @@ const LeafletVelocity = forwardRef(({windData}, ref) => {
           velocityScale: 0.1 // arbitrary defaults 0.005
         });
 
-        if (ref.current && windGlobalLayer)
+
+        if (ref.current && windGlobalLayer) {
           ref.current.addOverlay(windGlobalLayer, "Wind - Global");
+        }
       })
       .catch((err) => console.log("Error loading Global wind data:",err));
 
@@ -81,7 +83,7 @@ const LeafletVelocity = forwardRef(({windData}, ref) => {
           },
           data: data,
           maxVelocity: 0.6,
-          velocityScale: 0.1 // arbitrary default 0.005
+          velocityScale: 0.1 
         });
 
         if (ref.current && waterGbrLayer)
@@ -106,21 +108,19 @@ const LeafletVelocity = forwardRef(({windData}, ref) => {
   
     useEffect(() => {
       if (!map || !windData || !ref.current) return;
-  
       let mounted = true;
-
-      console.log("From Leaflet data type: " + Object.prototype.toString.call(windData));
-      console.log(windData.length);
-      console.log("WinData: " + windData);
-      console.log("WindData:", JSON.stringify(windData, null, 2));
-
-      console.log("Adding Balloon Wind Data to Map...");
   
       // Remove previous balloon wind layer if exists
       // if (balloonWindLayer) {
       //   ref.current.removeOverlay(balloonWindLayer);
       // }
   
+      if (balloonWindLayer) {
+        console.log("Remvoving Previous layer!");
+        map.removeLayer(balloonWindLayer); // Correct way to remove
+        ref.current.removeLayer(balloonWindLayer);
+      }
+
       // Create new wind layer for the selected balloon
       const newBalloonWindLayer = L.velocityLayer({
         displayValues: true,
@@ -133,18 +133,35 @@ const LeafletVelocity = forwardRef(({windData}, ref) => {
         maxVelocity: 20
       });
   
-      if (mounted && ref.current) {
-        ref.current.addOverlay(newBalloonWindLayer, "Wind - Balloon");
-        setBalloonWindLayer(newBalloonWindLayer);
-      }
+      // if (mounted && ref.current) {
+      //   ref.current.addOverlay(newBalloonWindLayer, "Wind - Balloon");
+      //   setBalloonWindLayer(newBalloonWindLayer);
+      // }
+
+      // newBalloonWindLayer.addTo(map);
+      // setBalloonWindLayer(newBalloonWindLayer);
+      //     // Add to Layer Control (checkbox panel)
+      // ref.current.addOverlay(newBalloonWindLayer, "Wind - Balloon");
+    //  Add to Layer Control BUT KEEP IT UNCHECKED (by NOT adding to map yet!)
+    ref.current.addOverlay(newBalloonWindLayer, "Wind - Balloon");
+
+    setBalloonWindLayer(newBalloonWindLayer);
+
   
       return () => {
         mounted = false;
-        if (ref.current && balloonWindLayer) {
-          ref.current.removeOverlay(balloonWindLayer);
+        // if (map && ref.current && balloonWindLayer) {
+        //   map.removeOverlay(balloonWindLayer);
+        // }
+        if (map.hasLayer(newBalloonWindLayer)) {
+          console.log("Remvoving current layer!");
+          map.removeLayer(newBalloonWindLayer);
+        }
+        if (ref.current) {
+          ref.current.removeLayer(newBalloonWindLayer);
         }
       };
-    }, [windData, map, ref]); // Updates whenever windData changes
+    }, [windData, map, ref]);
 
 
   return null;

@@ -1,21 +1,24 @@
 import * as turf from '@turf/turf';
 import * as _ from 'lodash';
 
-export const generateWindGrid = (scatteredDataNEW) => {
+export const generateWindGrid = (scatteredData) => {
 
     // Example scattered data points (from React frontend)
-    const scatteredData = [
-        { "lat": -39.28, "lon": -87.98, "u": -10.40, "v": 0.12 },
-        { "lat": -38.94, "lon": -87.92, "u": -24.15, "v": 1.59 },
-        { "lat": -38.16, "lon": -87.85, "u": -22.81, "v": 3.37 },
-        { "lat": -37.42, "lon": -87.81, "u": -21.6, "v": 5.17 },
-        { "lat": -36.72, "lon": -88.40, "u": -20.25, "v": 7.83 },
-        { "lat": -36.07, "lon": -88.69, "u": -18.40, "v": 9.76 },
-        { "lat": -34.88, "lon": -89.47, "u": -15.21, "v": 14.53 },
-        { "lat": -34.34, "lon": -89.97, "u": -13.03, "v": 18.26 },
-        { "lat": -33.85, "lon": -90.54, "u": -10.22, "v": 23.13 },
-        { "lat": -32.61, "lon": -92.68, "u": -10.22, "v": 23.13 },
-    ];
+    // const scatteredData = [
+    //     { "lat": -39.28, "lon": -87.98, "u": -10.40, "v": 0.12 },
+    //     { "lat": -38.94, "lon": -87.92, "u": -24.15, "v": 1.59 },
+    //     { "lat": -38.16, "lon": -87.85, "u": -22.81, "v": 3.37 },
+    //     { "lat": -37.42, "lon": -87.81, "u": -21.6, "v": 5.17 },
+    //     { "lat": -36.72, "lon": -88.40, "u": -20.25, "v": 7.83 },
+    //     { "lat": -36.07, "lon": -88.69, "u": -18.40, "v": 9.76 },
+    //     { "lat": -34.88, "lon": -89.47, "u": -15.21, "v": 14.53 },
+    //     { "lat": -34.34, "lon": -89.97, "u": -13.03, "v": 18.26 },
+    //     { "lat": -33.85, "lon": -90.54, "u": -10.22, "v": 23.13 },
+    //     { "lat": -32.61, "lon": -92.68, "u": -10.22, "v": 23.13 },
+    // ];
+
+    // console.log("Length of Scattered Data: " + scatteredData.length);
+    // console.log("Scattered Data: " + JSON.stringify(scatteredData, null, 2));
 
     // Define grid resolution
     const nx = 24;
@@ -120,6 +123,18 @@ export const generateWindGrid = (scatteredDataNEW) => {
         }
     ];
 
-    console.log("Generated Wind Grid:", windGridData);
+    // console.log("Generated Wind Grid:", windGridData);
+
+    /*
+    // To Download the file
+    const jsonString = JSON.stringify(windGridData, null, 2);
+
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'windData.json';
+    link.click();
+    */
+
     return windGridData;
 };

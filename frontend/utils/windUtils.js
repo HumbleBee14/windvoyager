@@ -84,6 +84,6 @@ export const computeScatteredWindData = (originalTrajectoryData) => {
         });
     }
 
-    console.log("Computed Scattered Wind Data:", scatteredData);
+    // console.log("Computed Scattered Wind Data:", scatteredData);
     return scatteredData;
 };
