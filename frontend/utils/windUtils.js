@@ -52,38 +52,46 @@ export const computeScatteredWindData = (originalTrajectoryData) => {
         return [];
     }
 
+    // Reverse the array to process from past to present
+    const chronologicalData = [...originalTrajectoryData].reverse();
+
+    // console.log("Chronological order: " + JSON.stringify(chronologicalData,null,4));
+
     const scatteredData = [];
 
-    for (let i = 1; i < originalTrajectoryData.length; i++) {
-        const prev = originalTrajectoryData[i - 1];
-        const curr = originalTrajectoryData[i];
+    for (let i = 0; i < chronologicalData.length; i++) {
+        const curr = chronologicalData[i];
+        const next = chronologicalData[i + 1];
 
         // Ensure both points exist and are not missing
-        if (!prev || !curr || prev.missing || curr.missing) continue;
+        if (!next || !curr || next.missing || curr.missing) continue;
 
-        // Extract positions
-        const lat1 = prev.position[0], lon1 = prev.position[1];
-        const alt1 = prev.altitude;
-        const lat2 = curr.position[0], lon2 = curr.position[1];
-        const alt2 = curr.altitude;
+        // Calculate vectors from current to next position
+        const { speed, direction } = calculateWindSpeedAndDirection(
+            curr.position[0], curr.position[1],
+            next.position[0], next.position[1],
+            next.hour, curr.hour,
+            curr.altitude, next.altitude
+        );
 
         // Compute wind speed and direction
-        const { speed, direction } = calculateWindSpeedAndDirection(lat1, lon1, lat2, lon2, prev.hour, curr.hour, alt1, alt2);
-        if (speed === "-" || direction === "-") continue; // Skip invalid cases
+        if (speed === "-" || direction === "-") continue;
 
-        // Convert wind direction into U, V components
-        const u = speed * Math.cos(direction * (Math.PI / 180)); // Eastward component
-        const v = speed * Math.sin(direction * (Math.PI / 180)); // Northward component
+        // Adjust vector components for meteorological convention
+        const angleRad = direction * (Math.PI / 180);
+        const u = -speed * Math.sin(angleRad); // Eastward component
+        const v = -speed * Math.cos(angleRad); // Northward component
 
         // Store in scattered format
         scatteredData.push({
-            lat: lat2,
-            lon: lon2,
+            lat: curr.position[0],
+            lon: curr.position[1],
             u: parseFloat(u.toFixed(2)),
             v: parseFloat(v.toFixed(2))
         });
     }
 
     // console.log("Computed Scattered Wind Data:", scatteredData);
+    // return scatteredData.reverse();
     return scatteredData;
 };

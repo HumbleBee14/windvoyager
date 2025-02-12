@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Draggable from "react-draggable";
 
 const BalloonDataPopup = ({ data, balloonId, onClose }) => {
-  
+  const nodeRef = useRef(null);
+
   // Handle ESC Key to close the popup
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -20,8 +21,8 @@ const BalloonDataPopup = ({ data, balloonId, onClose }) => {
   }, [onClose]);
 
   return (
-    <Draggable>
-      <div className="popup-container">
+    <Draggable nodeRef={nodeRef}>
+      <div ref={nodeRef} className="popup-container">
         <button className="close-btn" onClick={onClose}>✖</button>
         
         <h3 className="popup-title">Balloon #{balloonId} Data Log</h3>

@@ -21,16 +21,19 @@ function linspace(start, stop, num) {
     const step = (stop - start) / (num - 1);
     return Array.from({length: num}, (_, i) => start + step * i);
 }
-
 function meshgrid(x, y) {
+    // Reverse the order of y coordinates to match Leaflet-Velocity's expectations
+    const reversedY = [...y].reverse();
     const meshX = [];
     const meshY = [];
-    for (let i = 0; i < y.length; i++) {
+    
+    for (let i = 0; i < reversedY.length; i++) {
         meshX.push([...x]);
-        meshY.push(Array(x.length).fill(y[i]));
+        meshY.push(Array(x.length).fill(reversedY[i]));
     }
     return [meshX, meshY];
 }
+
 
 function calculateBarycentricCoordinates(point, triangle) {
     const [x, y] = point;
@@ -53,7 +56,7 @@ function interpolatePoint(point, trianglePoints, values) {
 }
 
 export function generateWindGridData(scattered_data) {
-    const nx = 30, ny = 25;
+    const nx = 30, ny = 30;
     
     // Get min/max lat/lon
     const lonMin = Math.min(...scattered_data.map(d => d.lon));

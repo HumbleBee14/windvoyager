@@ -120,11 +120,13 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
       return;
     }
 
+    // console.log("Scattered data:" + JSON.stringify(scatteredData, null, 4));
+
     // Generate structured wind grid data
     // const windGrid = generateWindGrid(scatteredData);
     const windGrid = generateWindGridData(scatteredData);
 
-    console.log("Balloon Tracker Wind Grid:", windGrid);
+    // console.log("Balloon Tracker Wind Grid:", windGrid);
     setWindData(windGrid); // Trigger re-render
   };
 
