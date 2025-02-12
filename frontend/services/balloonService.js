@@ -11,7 +11,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8001
  */
 export const fetchBalloonData = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/history`);
+    const response = await axios.get(`${API_BASE_URL}/balloons/history`);
     return response.data;
   } catch (error) {
     console.error("Error fetching balloon data:", error);
@@ -25,7 +25,7 @@ export const requestWindData = async (balloonId) => {
   console.log(`Requesting wind data for Balloon #${balloonId}...`);
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/generate-wind`, { balloonId });
+    const response = await axios.post(`${API_BASE_URL}/balloons/generate-wind`, { balloonId });
     console.log("Hogya download bro windata");
     return response.data;
   } catch (error) {
