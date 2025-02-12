@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, LayersControl, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-arrowheads";
@@ -121,9 +121,8 @@ const ConstellationView = ({ balloonData, refreshData, trackBalloon }) => {
 
       </div>
 
-
   
-      {/* Centered Map Container */}
+      {/* _____________________________________ Map Container ______________________________________ */}
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100vw", height: "85vh" }}>
         
         <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={2}>
@@ -131,6 +130,18 @@ const ConstellationView = ({ balloonData, refreshData, trackBalloon }) => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           />
+          
+          <LayersControl position="topright" >
+
+              <LayersControl.Overlay name="Satellite">
+                <TileLayer
+                  attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS
+              AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+                  url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                />
+              </LayersControl.Overlay>
+
+          </LayersControl>
   
           {selectedData.map((balloon, index) => {
             let isMissing = balloon.length <= 1;
@@ -157,11 +168,9 @@ const ConstellationView = ({ balloonData, refreshData, trackBalloon }) => {
                       <strong>Longitude:</strong> {markerData[1]?.toFixed(5) ?? "Unknown"}° <br />
                     </div>
             
-                    {/* Altitude & Tracker Icon in Same Row */}
                     <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                       <strong>Altitude:</strong> {markerData[2]?.toFixed(2) ?? "Unknown"} km
                       
-                      {/* Transparent Tracker Icon with Hover Tooltip */}
                       <span 
                         onClick={() => trackBalloon(index + 1)}
                         style={{
@@ -180,7 +189,6 @@ const ConstellationView = ({ balloonData, refreshData, trackBalloon }) => {
                       </span>
                     </div>
             
-                    {/* Move Data Missing Message to a New Line */}
                     {isMissing && (
                       <div style={{ color: "red", marginTop: "5px" }}>
                         Data Missing at {selectedHour}H → Using {source === "past" 
