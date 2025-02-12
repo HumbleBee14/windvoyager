@@ -82,6 +82,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
   const [balloonDataLog, setBalloonDataLog] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [windData, setWindData] = useState(null);
+  const [clickedCoords, setClickedCoords] = useState(null);
 
   const layerControlRef = useRef();
 
@@ -108,6 +109,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
       // setWindData(null);
       return;
     }
+    // console.log(originalTrajectoryData);
 
     // Generate scattered wind data (u, v components)
     const scatteredData = computeScatteredWindData(originalTrajectoryData);
@@ -126,7 +128,39 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
     setWindData(windGrid); // Trigger re-render
   };
 
+  // ------------------------------------------------------
 
+  const MapClickHandler = () => {
+    const map = useMap();
+    
+    useEffect(() => {
+      map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        
+        const popup = L.popup({
+          className: 'transparent-popup',
+          autoClose: true,
+          closeButton: false,
+          offset: [0, -10]
+        })
+          .setLatLng(e.latlng)
+          .setContent(`
+            <div style="font-weight: bold;">
+              Latitude: ${lat.toFixed(6)}<br>
+              Longitude: ${lng.toFixed(6)}
+            </div>
+          `)
+          .openOn(map);
+        
+        setTimeout(() => {
+          map.closePopup(popup);
+        }, 3000);
+      });
+    }, [map]);
+  
+    return null;
+  };
+  
   // ------------------------------------------------------
 
   const extractBalloonTrajectory = () => {
@@ -222,7 +256,6 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
     setTrajectory(recordedTrajectory.reverse());
     setOriginalTrajectoryData(originalData.reverse());
-    setOriginalTrajectoryData(originalData);
     setBalloonDataLog(balloonLog.reverse());
     setMissingHours(new Set([...missingTimestamps].reverse()));
 
@@ -314,6 +347,8 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
           </LayersControl>
 
           <LeafletVelocity windData={windData} ref={layerControlRef} />
+
+          <MapClickHandler />
 
 
           <AutoZoom trajectory={trajectory} /> {/* Auto-adjust zoom when trajectory updates */}

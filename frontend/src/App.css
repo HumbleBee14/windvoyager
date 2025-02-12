@@ -42,6 +42,22 @@
 }
 
 /* ------------------ */
+.transparent-popup .leaflet-popup-content-wrapper {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  border-radius: 10px;
+}
+
+.transparent-popup .leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* ------------------ */
 
 @import "leaflet/dist/leaflet.css";
 
