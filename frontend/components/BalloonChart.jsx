@@ -138,9 +138,9 @@ const BalloonChart = ({ trajectoryData }) => {
 
                     <Line 
                         yAxisId="left"
-                        type="monotone" 
+                        type="natural" 
                         dataKey="altitude" 
-                        stroke="#8884d8" 
+                        stroke="#4B3A26" 
                         name="Altitude (km)"
                         connectNulls={true}
                         strokeWidth={2}
@@ -150,7 +150,7 @@ const BalloonChart = ({ trajectoryData }) => {
                         yAxisId="right"
                         type="monotone" 
                         dataKey="windSpeed" 
-                        stroke="#82ca9d" 
+                        stroke="#00B2CA" 
                         name="Wind Speed (m/s)"
                         connectNulls={true}
                         strokeWidth={2}

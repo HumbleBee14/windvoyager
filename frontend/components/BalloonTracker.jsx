@@ -220,6 +220,8 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
             type: "Recorded"
         });
 
+       
+        // Handle Longitude Wraparound (IDL Fix)
         // If there's a previous point, check for sudden longitude wraparound
         if (lastValidLongitude !== null) {
           let lonDiff = lon - lastValidLongitude;
@@ -233,6 +235,15 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
             }
           }
         }
+
+        // Latitude Wraparound Fix
+        // Mercator projection forces a straight line unless we manually add curved interpolation points.
+
+        // if (Math.abs(lat) > 85) {
+        //   console.log("For hour: " + hour + " Original latitude is: " + lat); 
+        //   lat = lat > 0 ? 170 - lat : -170 - lat;  // Mirror across the poles
+        //   console.log("For hour: " + hour + " Modified latitude is: " + lat); 
+        // }
 
         recordedTrajectory.push({
           position: [lat, lon],
