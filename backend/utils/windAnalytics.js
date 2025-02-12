@@ -1,13 +1,13 @@
-import tzlookup from "tz-lookup";
+const tzlookup = require('tz-lookup');
 
 /**
  * Compute average wind speed per altitude bin, grouped by time zone, for all 24 hours.
  * @param {Object} balloonData - { hour: [[lat, lon, alt], ...], ... } (24 hours)
  * @returns {Object} { hour: { timeZone: { altitudeBin: avgSpeed } } }
  */
-export function computeWindAnalytics(balloonData) {
-    if (!balloonData || typeof balloonData !== "object") {
-        throw new Error("Invalid balloon data format.");
+function computeWindAnalytics(balloonData) {
+    if (!balloonData || typeof balloonData !== 'object') {
+        throw new Error('Invalid balloon data format.');
     }
 
     const hourlyAnalytics = {}; // Store per-hour analytics
@@ -56,3 +56,5 @@ export function computeWindAnalytics(balloonData) {
 
     return hourlyAnalytics;
 }
+
+module.exports = { computeWindAnalytics };

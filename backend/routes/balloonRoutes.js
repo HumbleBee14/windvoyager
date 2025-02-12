@@ -1,5 +1,5 @@
 const express = require("express");
-const { fetchLast24HoursData, getBalloonInsights } = require("../services/balloonService");
+const { fetchLast24HoursData, getBalloonInsights, analyzeWindData } = require("../services/balloonService");
 const { exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
@@ -82,14 +82,18 @@ router.post("/generate-wind", async (req, res) => {
 // Analyze wind speed at different altitudes grouped by time zones.
 router.post("/analyze-wind", (req, res) => {
   try {
-    const balloonData = req.body.balloonData; // will take timezone info, hour for grouping
-    try {
-      const result = await analyzeWindData();
+      const balloonData = req.body.balloonData;
+      if (!balloonData) {
+          return res.status(400).json({ error: "Balloon data is required." });
+      }
+
+      const result = analyzeWindData(balloonData);
       return res.json(result);
   } catch (error) {
       return res.status(500).json({ error: "Internal server error." });
   }
 });
+
 // -------------------------------------------------------------
 
 module.exports = router;

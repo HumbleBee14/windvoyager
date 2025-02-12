@@ -73,7 +73,7 @@ async function getBalloonInsights(balloonId) {
 }
 
 // For computing 24-hour balloon data wind analytics by each timezone
-export async function analyzeWindData() {
+async function analyzeWindData() {
   try {
       const balloonData = await fetchLast24HoursData();
       return computeWindAnalytics(balloonData);
@@ -85,4 +85,4 @@ export async function analyzeWindData() {
 
 // -------------------------------------------------------------
 
-module.exports = { fetchBalloonData, fetchLast24HoursData, getBalloonTrajectory, getBalloonInsights };
+module.exports = { analyzeWindData, fetchBalloonData, fetchLast24HoursData, getBalloonTrajectory, getBalloonInsights };
