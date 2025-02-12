@@ -4,6 +4,7 @@ import BalloonDataPopup from "./BalloonDataPopup";
 import LeafletVelocity from "./LeafletVelocity";
 import { calculateWindSpeedAndDirection, getCompassDirection, computeScatteredWindData } from "../utils/windUtils";
 import { generateWindGrid } from "../utils/windDataUtils";
+import { generateWindGridData } from "../utils/windy";
 import L from "leaflet";
 import "./BalloonDataPopup.css";
 import "leaflet/dist/leaflet.css";
@@ -118,9 +119,10 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
     }
 
     // Generate structured wind grid data
-    const windGrid = generateWindGrid(scatteredData);
+    // const windGrid = generateWindGrid(scatteredData);
+    const windGrid = generateWindGridData(scatteredData);
 
-    // console.log("Balloon Tracker Wind Grid:", windGrid);
+    console.log("Balloon Tracker Wind Grid:", windGrid);
     setWindData(windGrid); // Trigger re-render
   };
 
@@ -220,6 +222,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
     setTrajectory(recordedTrajectory.reverse());
     setOriginalTrajectoryData(originalData.reverse());
+    setOriginalTrajectoryData(originalData);
     setBalloonDataLog(balloonLog.reverse());
     setMissingHours(new Set([...missingTimestamps].reverse()));
 

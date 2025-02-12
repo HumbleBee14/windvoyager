@@ -7,7 +7,7 @@ import { useMap } from "react-leaflet";
 const LeafletVelocity = forwardRef(({windData}, ref) => {
   const map = useMap();
   const [balloonWindLayer, setBalloonWindLayer] = useState(null);
-
+  
   useEffect(() => {
     if (!map) return;
     let mounted = true;
@@ -67,10 +67,19 @@ const LeafletVelocity = forwardRef(({windData}, ref) => {
       displayOptions: {
         velocityType: "Balloon Wind",
         position: "bottomleft",
-        emptyString: "No balloon wind data"
+        emptyString: "No velocity data",
+        showCardinal: true,
+        directionString: "Direction",
+        speedString: "Speed",
       },
       data: windData,
-      maxVelocity: 20
+      // minVelocity: 0, // used to align color scale
+      // maxVelocity: 3, // used to align color scale
+      // velocityScale: 0.1, // modifier for particle animations, arbitrarily defaults to 0.005
+      // colorScale: [], // define your own array of hex/rgb colors
+      onAdd: null, // callback function
+      onRemove: null, // callback function
+      opacity: 0.20, // layer opacity, default 0.97
     });
 
     ref.current.addOverlay(newBalloonWindLayer, "Wind - Balloon");

@@ -1,7 +1,7 @@
 import * as turf from '@turf/turf';
 import * as _ from 'lodash';
 
-export const generateWindGrid = (scatteredData) => {
+export const generateWindGrid = (data) => {
 
     // Example scattered data points (from React frontend)
     // const scatteredData = [
@@ -17,19 +17,40 @@ export const generateWindGrid = (scatteredData) => {
     //     { "lat": -32.61, "lon": -92.68, "u": -10.22, "v": 23.13 },
     // ];
 
-    // console.log("Length of Scattered Data: " + scatteredData.length);
-    // console.log("Scattered Data: " + JSON.stringify(scatteredData, null, 2));
+    /*
+    The wind direction is controlled by two components:
+            u (east-west wind component) →
+        Positive u → Wind blows eastward (right on the map)
+        Negative u → Wind blows westward (left on the map)
+            
+            v (north-south wind component) →
+        Positive v → Wind blows northward (up on the map)
+        Negative v → Wind blows southward (down on the map)
+    */
+
+    // const scatteredData = [...data].reverse();
+    const scatteredData = data;
+   
+    console.log("Length of Scattered Data: " + scatteredData.length);
+    console.log("Scattered Data: " + JSON.stringify(scatteredData, null, 2));
 
     // Define grid resolution
-    const nx = 24;
-    const ny = 22;
+    const nx = 15;
+    const ny = 15;
 
     // Get min/max lat/lon
     const points = scatteredData.map(d => turf.point([d.lon, d.lat]));
     const featureCollection = turf.featureCollection(points);
     const bbox = turf.bbox(featureCollection); // [west, south, east, north]
-    const lonMin = bbox[0], lonMax = bbox[2];
-    const latMin = bbox[1], latMax = bbox[3];
+    // const lonMin = bbox[0], lonMax = bbox[2];
+    // const latMin = bbox[1], latMax = bbox[3];
+
+    const paddingFactor = 0.08;  // Expands bounding box by 08%
+    const lonMin = bbox[0] - paddingFactor * (bbox[2] - bbox[0]);
+    const lonMax = bbox[2] + paddingFactor * (bbox[2] - bbox[0]);
+    const latMin = bbox[1] - paddingFactor * (bbox[3] - bbox[1]);
+    const latMax = bbox[3] + paddingFactor * (bbox[3] - bbox[1]);
+
 
     // Generate grid points
     const gridLon = Array.from({ length: nx }, (_, i) => lonMin + (lonMax - lonMin) * i / (nx - 1));
@@ -51,6 +72,19 @@ export const generateWindGrid = (scatteredData) => {
         const minIndex = distances.indexOf(Math.min(...distances));
         return data[minIndex]; // Basic nearest-neighbor interpolation
     }
+    
+    // Radial Basis Function Interpolation (better for smooth wind fields)
+    const radialInterpolate = (point, data) => {
+        const nearest = _.sortBy(data, d => Math.hypot(point.lon - d.lon, point.lat - d.lat));
+        const weights = nearest.map(d => 1 / (Math.hypot(point.lon - d.lon, point.lat - d.lat) + 1e-6));
+        const sumWeights = weights.reduce((a, b) => a + b, 0);
+    
+        return {
+            u: _.sum(nearest.map((d, i) => d.u * weights[i])) / sumWeights,
+            v: _.sum(nearest.map((d, i) => d.v * weights[i])) / sumWeights
+        };
+    };
+    
 
     // **Bilinear Interpolation for Wind Components**
     const bilinearInterpolate = (point, data) => {
@@ -72,14 +106,13 @@ export const generateWindGrid = (scatteredData) => {
     };
 
     // Compute wind grid
-    const gridU = grid.map(row => row.map(point => bilinearInterpolate(point, scatteredData).u));
-    const gridV = grid.map(row => row.map(point => bilinearInterpolate(point, scatteredData).v));
+    const gridU = grid.map(row => row.map(point => radialInterpolate(point, scatteredData).u));
+    const gridV = grid.map(row => row.map(point => radialInterpolate(point, scatteredData).v));
 
     // Convert to 1D list for Leaflet-Velocity
     const gridUList = _.flatten(gridU);
     const gridVList = _.flatten(gridV);
 
-    // Convert NaN to null (like Python version)
     const gridUListClean = gridUList.map(val => Number.isNaN(val) ? null : val);
     const gridVListClean = gridVList.map(val => Number.isNaN(val) ? null : val);
 
@@ -125,16 +158,15 @@ export const generateWindGrid = (scatteredData) => {
 
     // console.log("Generated Wind Grid:", windGridData);
 
-    /*
     // To Download the file
-    const jsonString = JSON.stringify(windGridData, null, 2);
 
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'windData.json';
-    link.click();
-    */
+    // const jsonString = JSON.stringify(windGridData, null, 2);
+
+    // const blob = new Blob([jsonString], { type: 'application/json' });
+    // const link = document.createElement('a');
+    // link.href = URL.createObjectURL(blob);
+    // link.download = 'windData.json';
+    // link.click();
 
     return windGridData;
 };
