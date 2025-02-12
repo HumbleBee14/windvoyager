@@ -1,6 +1,7 @@
 const axios = require("axios");
 const { cleanBalloonData } = require("../utils/dataCleaner");
 const { computeBalloonInsights } = require("../utils/insightsCalculator");
+const { computeWindAnalytics } = require("../utils/windAnalytics.js");
 
 const BASE_URL = "https://a.windbornesystems.com/treasure/";  // TODO: We can fetch this from .env later
 
@@ -71,7 +72,16 @@ async function getBalloonInsights(balloonId) {
   return computeBalloonInsights(trajectory);
 }
 
-
+// For computing 24-hour balloon data wind analytics by each timezone
+export async function analyzeWindData() {
+  try {
+      const balloonData = await fetchLast24HoursData();
+      return computeWindAnalytics(balloonData);
+  } catch (error) {
+      console.error("Error in analyzeWindData:", error.message);
+      throw error;
+  }
+}
 
 // -------------------------------------------------------------
 

@@ -5,11 +5,13 @@ const path = require("path");
 const fs = require("fs");
 
 const router = express.Router();
+// -------------------------------------------------------------
 
 const PYTHON_SCRIPT = path.join(__dirname, "../scripts/generate_wind_grid.py");
 const OUTPUT_FILE = path.join(__dirname, "../data/");
 const FILE_NAME = ("wind_grid_data.json");
 
+// -------------------------------------------------------------
 
 // API Route to get last 24-hour balloon data
 router.get("/history", async (req, res) => {
@@ -22,6 +24,7 @@ router.get("/history", async (req, res) => {
     }
   });
   
+  // -------------------------------------------------------------
 
 // API Route to get insights for a single balloon
 router.get("/insights/:id", async (req, res) => {
@@ -40,8 +43,9 @@ router.get("/insights/:id", async (req, res) => {
   }
 });
 
+// -------------------------------------------------------------
 
-
+// @Deprecated: Moved to frontned
 // API to generate GRIB (json) file for wind
 router.post("/generate-wind", async (req, res) => {
   console.log("Executing Python script to generate wind data...");
@@ -51,28 +55,41 @@ router.post("/generate-wind", async (req, res) => {
     // console.log("Python script stdout:", stdout);
     // console.error("Python script stderr:", stderr);
 
-      if (error) {
-          console.error(`Error executing Python script: ${error.message}`);
-          return res.status(500).json({ error: "Wind data generation failed." });
+    if (error) {
+      console.error(`Error executing Python script: ${error.message}`);
+      return res.status(500).json({ error: "Wind data generation failed." });
+    }
+
+    if (stderr) {
+      console.error(`Python script error: ${stderr}`);
+    }
+
+    // console.log("Python script executed successfully. Reading JSON file...");
+
+    // Read the generated JSON file and send it to frontend
+    fs.readFile(OUTPUT_FILE + FILE_NAME, "utf8", (err, data) => {
+      if (err) {
+        console.error("Error reading generated wind file:", err);
+        return res.status(500).json({ error: "Failed to read wind data file." });
       }
 
-      if (stderr) {
-          console.error(`Python script error: ${stderr}`);
-      }
-
-      // console.log("Python script executed successfully. Reading JSON file...");
-
-      // Read the generated JSON file and send it to frontend
-      fs.readFile(OUTPUT_FILE + FILE_NAME, "utf8", (err, data) => {
-          if (err) {
-              console.error("Error reading generated wind file:", err);
-              return res.status(500).json({ error: "Failed to read wind data file." });
-          }
-
-          res.json(JSON.parse(data)); // Send the wind JSON data
-      });
+      res.json(JSON.parse(data)); // Send the wind JSON data
+    });
   });
 });
 
+// -------------------------------------------------------------
+// Analyze wind speed at different altitudes grouped by time zones.
+router.post("/analyze-wind", (req, res) => {
+  try {
+    const balloonData = req.body.balloonData; // will take timezone info, hour for grouping
+    try {
+      const result = await analyzeWindData();
+      return res.json(result);
+  } catch (error) {
+      return res.status(500).json({ error: "Internal server error." });
+  }
+});
+// -------------------------------------------------------------
 
 module.exports = router;
