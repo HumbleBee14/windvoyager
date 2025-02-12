@@ -5,7 +5,7 @@ import * as turf from "@turf/turf";
  * Uses latest valid data (processed in reverse order).
  */
 export function calculateWindSpeedAndDirection(lat1, lon1, lat2, lon2, prevHour, currHour, alt1 = 0, alt2 = 0) {
-    if (!lat1 || !lon1 || !lat2 || !lon2 || currHour === null || prevHour === null || currHour >= prevHour) {
+    if (!lat1 || !lon1 || !lat2 || !lon2 || currHour === null || prevHour === null || prevHour >= currHour) {
         return { speed: "-", direction: "-" };
     }
 
@@ -68,7 +68,7 @@ export const computeScatteredWindData = (originalTrajectoryData) => {
         const alt2 = curr.altitude;
 
         // Compute wind speed and direction
-        const { speed, direction } = calculateWindSpeedAndDirection(lat1, lon1, lat2, lon2, curr.hour, prev.hour, alt1, alt2);
+        const { speed, direction } = calculateWindSpeedAndDirection(lat1, lon1, lat2, lon2, prev.hour, curr.hour, alt1, alt2);
         if (speed === "-" || direction === "-") continue; // Skip invalid cases
 
         // Convert wind direction into U, V components
