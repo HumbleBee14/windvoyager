@@ -4,24 +4,50 @@ import * as turf from "@turf/turf";
  * Calculate wind speed (m/s) and direction (degrees).
  * Uses latest valid data (processed in reverse order).
  */
-export function calculateWindSpeedAndDirection(lat1, lon1, lat2, lon2, prevHour, currHour, alt1 = 0, alt2 = 0) {
-    if (!lat1 || !lon1 || !lat2 || !lon2 || currHour === null || prevHour === null || prevHour >= currHour) {
+export function calculateTrajectoryWindSpeedDirection(lat1, lon1, lat2, lon2, prevHour, currHour, alt1 = 0, alt2 = 0) {
+    if (!lat1 || !lon1 || !lat2 || !lon2 || currHour === null || prevHour === null || currHour >= prevHour) {
         return { speed: "-", direction: "-" };
     }
 
     const point1 = turf.point([lon1, lat1]);
     const point2 = turf.point([lon2, lat2]);
-
+    
     const horizontalDistance = turf.distance(point1, point2, { units: "kilometers" });
-
+    
     // Compute 3D distance using altitude difference
     const altitudeDiff = alt2 - alt1;
     const totalDistance = Math.sqrt(horizontalDistance ** 2 + altitudeDiff ** 2);
-
+    
     const hoursElapsed = prevHour - currHour;
     const speed = (totalDistance * 1000) / (hoursElapsed * 3600);
-
+    
     const direction = turf.bearing(point1, point2);
+
+    return {
+        speed: parseFloat(speed.toFixed(2)), 
+        direction: parseFloat(direction.toFixed(2))
+    };
+}
+
+export function calculateScatteredWindSpeedDirection(lat1, lon1, lat2, lon2, prevHour, currHour, alt1 = 0, alt2 = 0) {
+    if (!lat1 || !lon1 || !lat2 || !lon2 || currHour === null || prevHour === null || prevHour <= currHour) {
+        console.log("Nahi aya yaha");
+        return { speed: "-", direction: "-" };
+    }
+
+    const point1 = turf.point([lon1, lat1]);
+    const point2 = turf.point([lon2, lat2]);
+    
+    const horizontalDistance = turf.distance(point1, point2, { units: "kilometers" });
+    
+    // Compute 3D distance using altitude difference
+    const altitudeDiff = alt2 - alt1;
+    const totalDistance = Math.sqrt(horizontalDistance ** 2 + altitudeDiff ** 2);
+    
+    const hoursElapsed = prevHour - currHour;
+    const speed = (totalDistance * 1000) / (hoursElapsed * 3600);
+    
+    const direction = turf.bearing(point2, point1);
 
     return {
         speed: parseFloat(speed.toFixed(2)), 
@@ -59,7 +85,7 @@ export const computeScatteredWindData = (originalTrajectoryData) => {
 
     const scatteredData = [];
 
-    for (let i = 0; i < chronologicalData.length; i++) {
+    for (let i = 0; i < chronologicalData.length+1; i++) {
         const curr = chronologicalData[i];
         const next = chronologicalData[i + 1];
 
@@ -67,15 +93,18 @@ export const computeScatteredWindData = (originalTrajectoryData) => {
         if (!next || !curr || next.missing || curr.missing) continue;
 
         // Calculate vectors from current to next position
-        const { speed, direction } = calculateWindSpeedAndDirection(
+        const { speed, direction } = calculateScatteredWindSpeedDirection(
             curr.position[0], curr.position[1],
             next.position[0], next.position[1],
-            next.hour, curr.hour,
+            curr.hour, next.hour,
             curr.altitude, next.altitude
         );
 
         // Compute wind speed and direction
-        if (speed === "-" || direction === "-") continue;
+        if (speed === "-" || direction === "-") {
+            console.log("holalalala - " + i);
+            continue;
+        }
 
         // Adjust vector components for meteorological convention
         const angleRad = direction * (Math.PI / 180);

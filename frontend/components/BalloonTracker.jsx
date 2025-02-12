@@ -2,9 +2,11 @@ import React, { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Popup, LayersControl, useMap } from "react-leaflet";
 import BalloonDataPopup from "./BalloonDataPopup";
 import LeafletVelocity from "./LeafletVelocity";
-import { calculateWindSpeedAndDirection, getCompassDirection, computeScatteredWindData } from "../utils/windUtils";
+import { calculateTrajectoryWindSpeedDirection, getCompassDirection, computeScatteredWindData } from "../utils/windUtils";
 import { generateWindGrid } from "../utils/windDataUtils";
 import { generateWindGridData } from "../utils/windy";
+import Modal from './Modal';
+import BalloonChart from "./BalloonChart";
 import L from "leaflet";
 import "./BalloonDataPopup.css";
 import "leaflet/dist/leaflet.css";
@@ -82,7 +84,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
   const [balloonDataLog, setBalloonDataLog] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [windData, setWindData] = useState(null);
-  const [clickedCoords, setClickedCoords] = useState(null);
+  const [showChart, setShowChart] = useState(false);
 
   const layerControlRef = useRef();
 
@@ -197,15 +199,15 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
         // Compute wind profile ONLY if a valid previous hour exists
         if (lastValidHour !== null) {
-            windData = calculateWindSpeedAndDirection(
-                lastValidLatitude, lastValidLongitude, lat, lon, lastValidHour, hour, lastValidAltitude, alt
-            );
+          windData = calculateTrajectoryWindSpeedDirection(
+              lastValidLatitude, lastValidLongitude, lat, lon, lastValidHour, hour, lastValidAltitude, alt
+          );
 
-            if (windData.direction !== "-") {
-              windData.compass = getCompassDirection(parseFloat(windData.direction));
+          if (windData.direction !== "-") {
+            windData.compass = getCompassDirection(parseFloat(windData.direction));
           }
         }
-
+          
         // balloonLog.push({ hour, lat, lon, alt, type: "Recorded" });   // NOTE: Importatn to keep it here, to keep log data original
         balloonLog.push({
             hour,
@@ -232,8 +234,6 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
           }
         }
 
-        lastValidLongitude = lon; // Update last valid longitude
-
         recordedTrajectory.push({
           position: [lat, lon],
           altitude: alt,
@@ -245,7 +245,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
         // Update last valid data for next iterations
         lastValidLatitude = lat;
-        lastValidLongitude = lon;
+        lastValidLongitude = lon; // Update last valid longitude (needed for wrap around problem)
         lastValidAltitude = alt;
         lastValidHour = hour;
 
@@ -317,6 +317,20 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
           }}>
             <strong>Data Gaps (Hours Ago): </strong> {Array.from(missingHours).join(", ")}
           </div>
+        )}
+
+        {/* __________________________ PLOT Graph ________________________ */}
+        <button 
+            className="chart-button"
+            onClick={() => setShowChart(true)}
+            style={{position: 'absolute', top: '20px', right: '20px', zIndex: 1000}} >
+            Show Trajectory Charts
+        </button>
+
+        {showChart && (
+            <Modal onClose={() => setShowChart(false)}>
+                <BalloonChart trajectoryData={trajectory} />
+            </Modal>
         )}
 
         <button onClick={() => setShowPopup(true)} style={{ padding: "5px 15px", cursor: "pointer", background: "#222", color: "#fff", borderRadius: "5px" }}>

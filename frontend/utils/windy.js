@@ -56,13 +56,22 @@ function interpolatePoint(point, trianglePoints, values) {
 }
 
 export function generateWindGridData(scattered_data) {
-    const nx = 30, ny = 30;
+    const nx = 30, ny = 25;
     
     // Get min/max lat/lon
     const lonMin = Math.min(...scattered_data.map(d => d.lon));
     const lonMax = Math.max(...scattered_data.map(d => d.lon));
     const latMin = Math.min(...scattered_data.map(d => d.lat));
     const latMax = Math.max(...scattered_data.map(d => d.lat));
+
+    // Add significant padding to ensure complete coverage
+    const padding = 2.0; // Increase padding (in degrees) to cover more area
+    // const lonMin = Math.min(...scattered_data.map(d => d.lon)) - padding;
+    // const lonMax = Math.max(...scattered_data.map(d => d.lon)) + padding;
+    // const latMin = Math.min(...scattered_data.map(d => d.lat)) - padding;
+    // const latMax = Math.max(...scattered_data.map(d => d.lat)) + padding;
+
+
     
     // Create grid coordinates
     const gridLon = linspace(lonMin, lonMax, nx);
