@@ -19,19 +19,41 @@ const blueMarker = new L.Icon({
   popupAnchor: [1, -34]
 });
 
-const ConstellationView = ({ processedHourlyData, selectedHour, onHourChange, refreshData, trackBalloon }) => {
+const ConstellationView = ({ 
+  processedData, 
+  groupedData,
+  selectedHour,
+  onHourChange,
+  refreshData,
+  trackBalloon 
+}) => {
+  
   const [validBalloonCount, setValidBalloonCount] = useState(0);
+  const [showTimezoneView, setShowTimezoneView] = useState(false);
+  const [selectedTimezone, setSelectedTimezone] = useState(null);
 
   // Recalculate valid balloons when data updates
   useEffect(() => {
-    setValidBalloonCount(processedHourlyData.filter(b => !b.isMissing).length);
-  }, [processedHourlyData]);
+    if (processedData) {
+      setValidBalloonCount(processedData.filter(b => !b.isMissing).length);
+    } else {
+      setValidBalloonCount(0);
+    }
+  }, [processedData]);
   
   // ---------------------------------------------
 
   const handleSelectionChange = (event) => {
     const hour = parseInt(event.target.value);
     onHourChange(hour);
+  };
+
+  // Get data based on view mode
+  const getDisplayData = () => {
+    if (!showTimezoneView || !selectedTimezone) {
+      return processedData || [];
+    }
+    return groupedData?.[selectedTimezone] || [];
   };
 
   // --------------------------------------------------------------------------------------------
@@ -58,6 +80,25 @@ const ConstellationView = ({ processedHourlyData, selectedHour, onHourChange, re
             ))}
           </select>
         </div>
+
+        <button onClick={() => setShowTimezoneView(!showTimezoneView)} style={{ marginLeft: "20px" }} >
+          {showTimezoneView ? "Show All Balloons" : "Filter by Timezone"}
+        </button>
+
+        {/* Show timezone selector only when timezone view is active */}
+        {showTimezoneView && (
+          <select 
+            value={selectedTimezone || ''} 
+            onChange={(e) => setSelectedTimezone(e.target.value)}
+          >
+            <option value="">Select Timezone</option>
+            {groupedData && Object.keys(groupedData).map(tz => (
+              <option key={tz} value={tz}>
+                {tz} ({groupedData[tz].length} balloons)
+              </option>
+            ))}
+          </select>
+        )}
 
         <div style={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
           <span style={{ fontWeight: "bold", textAlign: "center" }}>
@@ -93,7 +134,7 @@ const ConstellationView = ({ processedHourlyData, selectedHour, onHourChange, re
 
           </LayersControl>
   
-          {processedHourlyData.map((balloon, index) => (
+          {getDisplayData().map((balloon, index) => (
             <Marker 
               key={index} 
               position={[balloon.data[0], balloon.data[1]]} 

@@ -9,13 +9,35 @@ const MapView = () => {
   const [selectedHour, setSelectedHour] = useState(0);
   const [balloonData, setBalloonData] = useState(null);
   const [selectedBalloonId, setSelectedBalloonId] = useState(null);
-  
-  
+  const [processedData, setProcessedData] = useState(null);
+  const [groupedData, setGroupedData] = useState(null);
+  const [selectedTimezone, setSelectedTimezone] = useState(null);
+
   // Fetch Data on Load
   useEffect(() => {
     loadBalloonData();
   }, []);
   
+  // Process data when hourly data changes
+  useEffect(() => {
+    if (balloonData && balloonData[selectedHour]) {
+      // Process the hourly data once
+      const processed = getProcessedHourlyData();
+      // console.log("Processed Data:", processed);
+      setProcessedData(processed);
+
+      // Group the processed data by timezone
+      try {
+        const grouped = groupBalloonsByTimezone(processed);
+        // console.log("Grouped Data:", grouped);
+        setGroupedData(grouped);
+      } catch (error) {
+        console.error("Failed to group data by timezone:", error);
+        setGroupedData(null);
+      }
+    }
+  }, [balloonData, selectedHour]);
+
   // ---------------------------------------------------------
   
   // Function to Fetch Data
@@ -116,7 +138,8 @@ const MapView = () => {
 
       {mode === "constellation" ? (
         <ConstellationView 
-          processedHourlyData={getProcessedHourlyData()}
+          processedData={processedData}
+          groupedData={groupedData}
           selectedHour={selectedHour}
           onHourChange={handleHourChange}
           refreshData={loadBalloonData}

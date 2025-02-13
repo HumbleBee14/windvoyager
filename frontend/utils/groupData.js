@@ -1,44 +1,44 @@
 import tzlookup from "tz-lookup";
 
 /**
- * Groups balloon data based on their time zones.
- * @param {Array} balloonData - Array of balloon positions [lat, lon, alt]
- * @returns {Object} A mapping of time zones to arrays of balloon altitudes.
+ * Groups balloon data by time zone and includes index, data, source, refHour.
+ * @param {Array} balloonData - Array of Constellations of balloons for specific hour {data: [lat, lon, alt], source, refHour}.
+ * @returns {Object} An object mapping each time zone to an array of balloon data objects (grouping based on timezones). { timezone: [[B1],[Bx],[Bz]] }
  */
 export function groupBalloonsByTimezone(balloonData) {
     if (!balloonData || !Array.isArray(balloonData)) {
-        console.log(balloonData);
         throw new Error("Invalid balloon data format.");
     }
 
     const timezoneGroups = {};
 
-    for (const balloon of balloonData) {
-        if (!balloon || balloon.includes(null) || balloon.length <= 1) continue;
-
-        const [lat, lon, alt] = balloon;
-        const timeZone = tzlookup(lat, lon);
+    balloonData.forEach((balloon, index) => {
+        if (!balloon || balloon.length <= 1) return;
         
-        if (!timezoneGroups[timeZone]) {
-            timezoneGroups[timeZone] = [];
+        const [lat, lon, alt] = balloon.data;
+        if (lat === null || lon === null) return;
+        
+        try {
+            const timeZone = tzlookup(lat, lon);
+            if (!timezoneGroups[timeZone]) {
+                timezoneGroups[timeZone] = [];
+            }
+            
+            // Store complete balloon data with index
+            timezoneGroups[timeZone].push({
+                index,      // Added additional - in case needed in future else remove it later
+                data: balloon.data,
+                source: balloon.source,
+                refHour: balloon.refHour
+            });
+        } catch (error) {
+            console.warn(`Failed to lookup timezone for balloon ${index}:`, error);
         }
-        
-        timezoneGroups[timeZone].push(alt);
-    }
+    });
 
-    console.log(JSON.stringify(timezoneGroups, null, 2));
-    // console.log(Object.keys(timezoneGroups).length);
-    // console.log(Object.keys(timezoneGroups));
     return timezoneGroups;
 }
 
-
-/**
- * Sorts the balloon data in each timezone group by altitude.
- * @param {Object} groupedData - The grouped data { timezone: [altitudes] }.
- * @param {string} order - "asc" for ascending, "desc" for descending (default: "asc").
- * @returns {Object} A new object with sorted altitude data for each timezone.
- */
 /**
  * Sorts the balloon data in each timezone group by altitude.
  * @param {Object} groupedData - The grouped data { timezone: [[lat, lon, altitude], ...] }.
