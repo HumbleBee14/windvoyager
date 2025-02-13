@@ -1,5 +1,5 @@
-const { calculateDistance } = require("./haversine");
-const { calculateWindSpeedAndDirection } = require("./windCalculator");
+import calculateDistance from "./haversine.js";
+import { calculateWindSpeedAndDirection } from "./windCalculator.js";
 
 /**
  * Compute all insights for a single balloon.
@@ -73,4 +73,4 @@ function computeBalloonInsights(trajectory) {
     };
 }
 
-module.exports = { computeBalloonInsights };
+export { computeBalloonInsights };

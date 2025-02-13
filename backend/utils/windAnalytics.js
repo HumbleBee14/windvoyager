@@ -1,4 +1,4 @@
-const tzlookup = require('tz-lookup');
+import tzlookup from 'tz-lookup';
 
 /**
  * Compute average wind speed per altitude bin, grouped by time zone, for all 24 hours.
@@ -57,4 +57,4 @@ function computeWindAnalytics(balloonData) {
     return hourlyAnalytics;
 }
 
-module.exports = { computeWindAnalytics };
+export { computeWindAnalytics };

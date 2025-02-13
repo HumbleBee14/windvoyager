@@ -44,4 +44,4 @@ function cleanBalloonData(data, hoursAgo) {
     return cleanedData;
   }
 
-  module.exports = { cleanBalloonData };
+  export { cleanBalloonData };

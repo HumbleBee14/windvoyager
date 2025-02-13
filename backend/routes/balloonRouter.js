@@ -1,14 +1,19 @@
-const express = require("express");
-const { fetchLast24HoursData, getBalloonInsights, analyzeWindData } = require("../services/balloonService");
-const { exec } = require("child_process");
-const path = require("path");
-const fs = require("fs");
+import { Router } from "express";
+import { fetchLast24HoursData, getBalloonInsights, analyzeWindData } from "../services/balloonService.js";
+import { exec } from "child_process";
+import { readFile } from "fs";
 
-const router = express.Router();
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const router = Router();
 // -------------------------------------------------------------
 
-const PYTHON_SCRIPT = path.join(__dirname, "../scripts/generate_wind_grid.py");
-const OUTPUT_FILE = path.join(__dirname, "../data/");
+const PYTHON_SCRIPT = join(__dirname, "../scripts/generate_wind_grid.py");
+const OUTPUT_FILE = join(__dirname, "../data/");
 const FILE_NAME = ("wind_grid_data.json");
 
 // -------------------------------------------------------------
@@ -67,7 +72,7 @@ router.post("/generate-wind", async (req, res) => {
     // console.log("Python script executed successfully. Reading JSON file...");
 
     // Read the generated JSON file and send it to frontend
-    fs.readFile(OUTPUT_FILE + FILE_NAME, "utf8", (err, data) => {
+    readFile(OUTPUT_FILE + FILE_NAME, "utf8", (err, data) => {
       if (err) {
         console.error("Error reading generated wind file:", err);
         return res.status(500).json({ error: "Failed to read wind data file." });
@@ -96,4 +101,4 @@ router.post("/analyze-wind", (req, res) => {
 
 // -------------------------------------------------------------
 
-module.exports = router;
+export default router;

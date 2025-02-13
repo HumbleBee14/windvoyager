@@ -1,45 +1,23 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
+import dotenv from "dotenv";
+dotenv.config();
+import express from "express";
+import cors from "cors";
 
-const balloonRoutes = require("./routes/balloonRoutes");
+import balloonRouter from "./routes/balloonRouter.js";
+import weatherRouter from "./routes/weatherRouter.js";
 
 const app = express();
 const PORT = process.env.PORT || 8001;
 
-// app.use(cors());
+// Allow all origins for CORS
 app.use(cors({ origin: "*" }));
 
-// app.use(cors({ origin: "https://grepguru.com" }));
-
-
-/*
-const allowedOrigins = [
-  "https://grepguru.com", 
-  "https://windvoyager.pages.dev"
-];
-
-const corsOptions = {
-  origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
-      } else {
-          callback(new Error("Not allowed by CORS"));
-      }
-  },
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-
-*/
-
+// Middleware for parsing JSON requests
 app.use(express.json());
 
 // Routes
-app.use("/api/balloons", balloonRoutes);
-
-
+app.use("/api/balloons", balloonRouter);
+app.use("/api/weather", weatherRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
