@@ -33,19 +33,6 @@ const BalloonChart = ({ trajectoryData }) => {
         }))
     );
     
-
-    // const chartData = trajectoryData
-    //     .filter(point => point.hour <= startHour) // Only show from first valid point
-    //     .map(point => ({
-    //         timeLabel: point.hour === 0 ? 'now' : `${point.hour}h ago`,
-    //         altitude: point.alt === "-" ? null : point.alt,
-    //         windSpeed: point.windSpeed === "-" ? null : point.windSpeed,
-    //         hour: point.hour,
-    //         latitude: point.lat === "-" ? null : point.lat,
-    //         longitude: point.lon === "-" ? null : point.lon
-    //     }));
-
-
     //  -------------------------------------------------------------------------
     return (
         <div style={{ width: '100%', height: 450 }}>
