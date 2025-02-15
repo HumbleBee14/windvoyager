@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { MapContainer, TileLayer, LayersControl, Marker, Popup } from "react-leaflet";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { MapContainer, TileLayer, Polyline, LayersControl, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-arrowheads";
+import { getTimezoneBalloonTrajectories } from '../utils/trajectoryUtils';
+import DriftMarker from "react-leaflet-drift-marker";
 
 
 const redMarker = new L.Icon({
@@ -20,6 +22,7 @@ const blueMarker = new L.Icon({
 });
 
 const ConstellationView = ({ 
+  completeData,
   processedData, 
   groupedData,
   selectedHour,
@@ -31,6 +34,16 @@ const ConstellationView = ({
   const [validBalloonCount, setValidBalloonCount] = useState(0);
   const [showTimezoneView, setShowTimezoneView] = useState(false);
   const [selectedTimezone, setSelectedTimezone] = useState(null);
+  // Animation
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [currentTimeStep, setCurrentTimeStep] = useState(0);
+  const [trajectoryMarkers, setTrajectoryMarkers] = useState([]);
+  const [trajectoryColors, setTrajectoryColors] = useState({});
+  const [fitBoundsFunction, setFitBoundsFunction] = useState(null);
+
+  const mapRef = useRef(null);
+
+  // --------------------------------------------------------
 
   // Recalculate valid balloons when data updates
   useEffect(() => {
@@ -40,6 +53,38 @@ const ConstellationView = ({
       setValidBalloonCount(0);
     }
   }, [processedData]);
+
+  // ---------------------
+
+  useEffect(() => {
+    let animationTimer;
+
+    if (isAnimating && trajectoryMarkers.length > 0) {
+      animationTimer = setInterval(() => {
+        setCurrentTimeStep(prev => {
+          const next = prev + 1;
+          if (next >= 24) {
+            setIsAnimating(false);
+            return 0;
+          }
+          return next;
+        });
+      }, 1000); // 1 second per step
+    }
+  
+    return () => {
+      if (animationTimer) clearInterval(animationTimer);
+    };
+  }, [isAnimating, trajectoryMarkers]);
+
+  // ------------------
+  // Add useEffect for timezone filter
+  useEffect(() => {
+    if (showTimezoneView && selectedTimezone && fitBoundsFunction) {
+      const visibleMarkers = groupedData[selectedTimezone];
+      fitBoundsFunction(visibleMarkers);
+    }
+  }, [showTimezoneView, selectedTimezone, fitBoundsFunction]);
   
   // ---------------------------------------------
 
@@ -55,6 +100,77 @@ const ConstellationView = ({
     }
     return groupedData?.[selectedTimezone] || [];
   };
+
+  // ---------------------------------------
+  const handleShowTrajectories = () => {
+    const trajectories = getTimezoneBalloonTrajectories(
+        completeData, 
+        groupedData, 
+        selectedTimezone
+    );
+    // console.log(trajectories);
+    console.log("Trajectories loaded:", trajectories.length);
+
+    // Generate colors for each trajectory
+    const colors = {};
+    trajectories.forEach((_, index) => {
+      colors[index] = getRandomColor();
+    });
+
+    setTrajectoryColors(colors);
+  
+  
+    if (trajectories.length > 0) {
+      const allPoints = trajectories.flatMap(t => t.path);
+      fitMarkersInView(allPoints);
+
+      startAnimation(trajectories);
+    }
+  };
+
+  // Animation control
+  const startAnimation = (trajectories) => {
+    setIsAnimating(true);
+    setTrajectoryMarkers(trajectories);
+    setCurrentTimeStep(0);
+  };
+
+  const getRandomColor = () => {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  };
+  // ----------------------------------
+  // Handle timezone filter selection
+  const handleTimezoneChange = (timezone) => {
+    setSelectedTimezone(timezone);
+    if (timezone) {
+      const visibleMarkers = groupedData[timezone];
+      fitMarkersInView(visibleMarkers);
+    }
+  };
+
+  // Function to fit bounds for visible markers
+  const fitMarkersInView = useCallback((markers) => {
+    if (!markers || markers.length === 0 || !mapRef.current) return;
+
+    const bounds = markers.reduce((bounds, marker) => {
+      const latLng = [marker.data[0], marker.data[1]];
+      return bounds.extend(L.latLng(latLng));
+    }, L.latLngBounds([]));
+
+    mapRef.current.fitBounds(bounds, {
+      padding: [50, 50],
+      maxZoom: 10,
+      duration: 1
+    });
+  }, []);
+
+  // ------------------------------------
+
 
   // --------------------------------------------------------------------------------------------
 
@@ -85,7 +201,6 @@ const ConstellationView = ({
           {showTimezoneView ? "Show All Balloons" : "Filter by Timezone"}
         </button>
 
-        {/* Show timezone selector only when timezone view is active */}
         {showTimezoneView && (
           <select 
             value={selectedTimezone || ''} 
@@ -100,12 +215,34 @@ const ConstellationView = ({
           </select>
         )}
 
-        <div style={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
+        {showTimezoneView && (
+          <button 
+            onClick={handleShowTrajectories}
+            disabled={isAnimating}
+            style={{ 
+              marginLeft: "20px",
+              padding: "8px 16px",
+              backgroundColor: isAnimating ? "#ccc" : "#4CAF50",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: isAnimating ? "default" : "pointer"
+            }}
+          >
+            Show Balloon Movements
+          </button>
+        )}
+
+        {!showTimezoneView && (
+          <div style={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
           <span style={{ fontWeight: "bold", textAlign: "center" }}>
             Active Balloons: <span style={{ color: "limegreen" }}>{validBalloonCount}</span>
           </span>
         </div>
+        )}
 
+
+        {/* <button onClick={refreshData} style={{ padding: "6px 12px", cursor: "pointer", fontWeight: "bold" }}> */}
         <button onClick={refreshData} style={{ padding: "6px 12px", cursor: "pointer", fontWeight: "bold" }}>
           Refresh Data
         </button>
@@ -116,7 +253,8 @@ const ConstellationView = ({
       {/* _____________________________________ Map Container ______________________________________ */}
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100vw", height: "85vh" }}>
         
-        <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={2}>
+        <MapContainer ref={mapRef} style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={2}>
+
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -134,7 +272,10 @@ const ConstellationView = ({
 
           </LayersControl>
   
-          {getDisplayData().map((balloon, index) => (
+          {/* Regular markers when not animating */}
+          {!isAnimating && getDisplayData().map((balloon, index) => (
+            // <AutoZoom trajectory={trajectory} />
+
             <Marker 
               key={index} 
               position={[balloon.data[0], balloon.data[1]]} 
@@ -143,7 +284,7 @@ const ConstellationView = ({
               <Popup>
                 <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                   <div>
-                    <strong>Balloon #: </strong> {index + 1} <br />
+                    <strong>Balloon #: </strong> {balloon.data[3]} <br />
                     <strong>Latitude:</strong> {balloon.data[0]?.toFixed(5) ?? "Unknown"}° <br />
                     <strong>Longitude:</strong> {balloon.data[1]?.toFixed(5) ?? "Unknown"}° <br />
                   </div>
@@ -153,7 +294,7 @@ const ConstellationView = ({
                       <strong>Altitude:</strong> {balloon.data[2]?.toFixed(2) ?? "Unknown"} km
                       
                       <span 
-                        onClick={() => trackBalloon(index + 1)}
+                        onClick={() => trackBalloon(balloon.data[3])}
                         style={{
                           cursor: "pointer",
                           fontSize: "16px",
@@ -181,6 +322,47 @@ const ConstellationView = ({
               </Popup>
             </Marker>
           ))}
+
+          {/* ----------------------------------------- */}
+
+          {/* Animated markers */}
+          {isAnimating && trajectoryMarkers.map((trajectory, index) => {
+            const currentPosition = trajectory.path.find(p => p.hour === currentTimeStep);
+            if (!currentPosition) return null;
+
+            // Create path coordinates for trace line
+            const pathCoords = trajectory.path
+            .filter(p => p.hour <= currentTimeStep)
+            .map(p => [p.data[0], p.data[1]]);
+
+            return (
+              <React.Fragment key={`animated-${index}`}>
+              <Polyline
+                positions={pathCoords}
+                color={trajectoryColors[index] || '#000'}
+                weight={2}
+                dashArray="5, 10"
+                opacity={0.6}
+              />
+
+                <DriftMarker
+                  key={`animated-${index}`}
+                  position={[currentPosition.data[0], currentPosition.data[1]]}
+                  duration={1000}
+                  icon={blueMarker}
+                >
+                  <Popup>
+                    <div>
+                      <strong>Balloon ID:</strong> {currentPosition.data[3]}<br />
+                      <strong>Hour:</strong> {currentTimeStep}<br />
+                      <strong>Altitude:</strong> {currentPosition.data[2].toFixed(2)} km
+                    </div>
+                  </Popup>
+                </DriftMarker>
+
+              </React.Fragment>
+            );
+          })}
 
         </MapContainer>
       </div>

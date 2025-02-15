@@ -24,6 +24,7 @@
     "react-dom": "^18.3.1",
     "react-draggable": "^4.4.6",
     "react-leaflet": "^4.2.1",
+    "react-leaflet-drift-marker": "^4.0.0",
     "recharts": "^2.15.1",
     "three": "^0.173.0",
     "tz-lookup": "^6.1.25"

@@ -138,6 +138,7 @@ const MapView = () => {
 
       {mode === "constellation" ? (
         <ConstellationView 
+          completeData={balloonData}
           processedData={processedData}
           groupedData={groupedData}
           selectedHour={selectedHour}

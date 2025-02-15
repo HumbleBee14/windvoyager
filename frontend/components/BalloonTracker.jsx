@@ -3,7 +3,6 @@ import { MapContainer, TileLayer, Marker, Polyline, Popup, LayersControl, useMap
 import BalloonDataPopup from "./BalloonDataPopup";
 import LeafletVelocity from "./LeafletVelocity";
 import { calculateTrajectoryWindSpeedDirection, getCompassDirection, computeScatteredWindData } from "../utils/windUtils";
-import { generateWindGrid } from "../utils/windDataUtils";
 import { generateWindGridData } from "../utils/windy";
 import Modal from './Modal';
 import BalloonChart from "./BalloonChart";
@@ -186,9 +185,11 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
         let lat = balloon[0];
         let lon = balloon[1];
         let alt = balloon[2];
+        let id = balloon[3];
 
         // Store original data without any modification
         originalData.push({
+          balloonId: id,
           position: [lat, lon],
           altitude: alt,
           hour,
@@ -217,6 +218,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
             windSpeed: windData.speed,
             windDirection: windData.direction,
             windCompass: windData.compass,
+            balloonId: id,
             type: "Recorded"
         });
 
@@ -246,12 +248,14 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
         // }
 
         recordedTrajectory.push({
+          balloonId: id,
           position: [lat, lon],
           altitude: alt,
           hour,
           windSpeed: windData.speed,
           windDirection: windData.direction,
-          missing: false
+          windCompass: windData.compass,
+          missing: false,
         });
 
         // Update last valid data for next iterations
@@ -262,7 +266,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
       } else {
         // Track missing hour
-        balloonLog.push({ hour, lat: "-", lon: "-", alt: "-", windSpeed: "-", windDirection: "-", type: "Missing" });
+        balloonLog.push({ hour, lat: "-", lon: "-", alt: "-", windSpeed: "-", windDirection: "-", balloonId: balloonId, windCompass: "-", type: "Missing" });
         missingTimestamps.add(hour);
       }
     }
