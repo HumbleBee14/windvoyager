@@ -100,6 +100,11 @@ const ConstellationView = ({
     if (showTimezoneView && selectedTimezone) {
       const visibleMarkers = groupedData[selectedTimezone];
       fitMarkersInView(visibleMarkers);
+      // Reset animation states when timezone changes
+      setIsAnimating(false);
+      setCurrentTimeStep(0);
+      setTrajectoryMarkers([]);
+      setTrajectoryColors({});
     }
   }, [showTimezoneView, selectedTimezone]);
   
@@ -153,17 +158,40 @@ const ConstellationView = ({
   };
 
   const getRandomColor = () => {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
+    if (Math.random() > 0.5) {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    } else {
+      const hue = Math.floor(Math.random() * 360);
+      return `hsl(${hue}, 70%, 45%)`;
     }
-    return color;
   };
+
   // ----------------------------------
-  // Handle timezone filter selection
+  // Modify the timezone view toggle handler
+  const handleTimezoneToggle = () => {
+    setShowTimezoneView(!showTimezoneView);
+    // Reset animation states
+    setIsAnimating(false);
+    setCurrentTimeStep(0);
+    setTrajectoryMarkers([]);
+    setTrajectoryColors({});
+  };
+
+  // Update timezone selection handler
   const handleTimezoneChange = (timezone) => {
     setSelectedTimezone(timezone);
+    // Reset animation states
+    setIsAnimating(false);
+    setCurrentTimeStep(0);
+    setTrajectoryMarkers([]);
+    setTrajectoryColors({});
+    setShowTrajectories(false);
+
     if (timezone) {
       const visibleMarkers = groupedData[timezone];
       fitMarkersInView(visibleMarkers);
@@ -230,7 +258,7 @@ const ConstellationView = ({
           </select>
         </div>
 
-        <button onClick={() => setShowTimezoneView(!showTimezoneView)} style={{ marginLeft: "20px" }} >
+        <button onClick={handleTimezoneToggle} style={{ marginLeft: "20px" }} >
           {showTimezoneView ? "Show All Balloons" : "Filter by Timezone"}
         </button>
 
@@ -290,7 +318,8 @@ const ConstellationView = ({
           </LayersControl>
   
           {/* Regular markers when not animating */}
-          {!isAnimating && currentTimeStep === 0 && getDisplayData().map((balloon, index) => (
+          {(!isAnimating && currentTimeStep === 0 || !trajectoryMarkers.length) &&
+           getDisplayData().map((balloon, index) => (
             // <AutoZoom trajectory={trajectory} />
 
             <Marker 
@@ -372,7 +401,7 @@ const ConstellationView = ({
                   color={trajectoryColors[index] || '#000'}
                   weight={2}
                   dashArray="5, 10"
-                  opacity={0.6}
+                  opacity={0.8}
                 />
                 <DriftMarker
                   position={[displayPosition.data[0], displayPosition.data[1]]}

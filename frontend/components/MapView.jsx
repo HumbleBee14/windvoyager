@@ -152,21 +152,27 @@ const MapView = () => {
         />
       )}
 
-      <div style={{ marginTop: "20px", width: "100%", borderTop: "1px solid #ccc", paddingTop: "10px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ marginTop: "20px", width: "100%", borderTop: "1px solid #ccc", paddingTop: "10px", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ marginRight: "10px" }}>
+          Balloon trajectory dataset courtesy of 
+          <a href="https://windbornesystems.com/" target="_blank" rel="noopener noreferrer" style={{ marginLeft: "5px" }}>
+            WindBorne Systems
+          </a>
+        </p>
+        <span style={{ margin: "0 10px" }}>|</span>
         <a
           href="https://www.linkedin.com/in/dineshyd/"
           target="_blank"
           rel="noopener noreferrer"
           style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}
-          >
+        >
           <img
             src="https://cdn-icons-png.flaticon.com/512/174/174857.png"
             alt="LinkedIn"
-            style={{ width: "24px", height: "24px", marginRight: "8px" }}
-            />
-            Developer: Dinesh Yadav 
+            style={{ width: "20px", height: "20px", marginRight: "8px", marginLeft: "10px" }}
+          />
+          Developer: Dinesh Yadav 
         </a>
-        <p style={{ marginBottom: "8px" }}>Balloon trajectory dataset courtesy of WindBorne Systems</p>
       </div>
     </div>
   );
