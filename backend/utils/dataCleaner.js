@@ -1,21 +1,21 @@
 // Function to clean and validate balloon data
 function cleanBalloonData(data, hoursAgo) {
-    if (typeof data === "string") {
-      try {
-        // Replace 'NaN' with 'null' to allow JSON parsing
-        let sanitizedDataString = data.replace(/NaN/g, "null");
-  
-        // Fix missing brackets
-        if (!sanitizedDataString.startsWith("[")) sanitizedDataString = `[${sanitizedDataString}`;
-        if (!sanitizedDataString.endsWith("]")) sanitizedDataString = `${sanitizedDataString}]`;
-  
-        // Parse the cleaned-up data
-        data = JSON.parse(sanitizedDataString);
-      } catch (error) {
-        console.error(`Corrupted JSON at ${hoursAgo}H - Cannot fix:`, error.message);
+  if (typeof data === "string") {
+    try {
+      // Replace 'NaN' with 'null' to allow JSON parsing
+      let sanitizedDataString = data.replace(/NaN/g, "null");
+      
+      // Fix missing brackets
+      if (!sanitizedDataString.startsWith("[")) sanitizedDataString = `[${sanitizedDataString}`;
+      if (!sanitizedDataString.endsWith("]")) sanitizedDataString = `${sanitizedDataString}]`;
+      
+      // Parse the cleaned-up data
+      data = JSON.parse(sanitizedDataString);
+    } catch (error) {
+      console.error(`Corrupted JSON at ${hoursAgo}H - Cannot fix:`, error.message);
         return []; // Ignore completely corrupted data
-      }
     }
+  }
   
     // -------------------------------------------------
   
@@ -29,15 +29,18 @@ function cleanBalloonData(data, hoursAgo) {
       data = [data];
     }
     // -------------------------------------------------
+
+    // console.log("Data : ", data); // log the actual data being processed
   
     // now we will replace invalid records with `[NaN]`
-    const cleanedData = data.map((record) => {
+    const cleanedData = data.map((record, index) => {
       const isValid = record.every((value) => value !== null && !isNaN(value));
-  
       // NEW BugFix: If valid, but the record is (0,0,0), treat it as missing (null)
       const isZeroCoordinates = record.length === 3 && record[0] === 0 && record[1] === 0 && record[2] === 0;
-  
-      return isValid && !isZeroCoordinates ? record : [NaN];
+
+      return (isValid && !isZeroCoordinates)
+      ? [...record, index + 1]
+      : [NaN];
     });
   
     // console.log(`Hour ${hoursAgo}: Cleaned dataset contains ${cleanedData.length} records.`);

@@ -8,12 +8,15 @@ const BASE_URL = "https://a.windbornesystems.com/treasure/"; // TODO: We can fet
 // ----------------------------------------------------------------
 
 // Fetch data from WindBorne API for a given hour
-export async function fetchBalloonData(hoursAgo = 0) {
+export async function fetchBalloonHourlyData(hoursAgo = 0) {
   try {
     const url = `${BASE_URL}${hoursAgo.toString().padStart(2, "0")}.json`;
     const response = await axios.get(url, { timeout: 5000 });
 
-    return cleanBalloonData(response.data, hoursAgo);
+    const cleanedData = cleanBalloonData(response.data, hoursAgo);
+    // console.log(`Fetched and cleaned balloon data for ${hoursAgo}H ago:`, cleanedData.length);
+    
+    return cleanedData;
   } catch (error) {
     // console.error(`Error fetching data from ${hoursAgo}H ago:`, error.message);
     return [];
@@ -26,7 +29,7 @@ export async function fetchLast24HoursData() {
   const fetchPromises = [];
 
   for (let i = 0; i < 24; i++) {
-    fetchPromises.push(fetchBalloonData(i));
+    fetchPromises.push(fetchBalloonHourlyData(i));
   }
 
   // fetchPromises.push(fetchBalloonData(17)); // Testing
