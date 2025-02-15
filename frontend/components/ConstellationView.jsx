@@ -39,7 +39,7 @@ const ConstellationView = ({
   const [currentTimeStep, setCurrentTimeStep] = useState(0);
   const [trajectoryMarkers, setTrajectoryMarkers] = useState([]);
   const [trajectoryColors, setTrajectoryColors] = useState({});
-  const [fitBoundsFunction, setFitBoundsFunction] = useState(null);
+  const [showTrajectories, setShowTrajectories] = useState(false);
 
   const mapRef = useRef(null);
 
@@ -55,21 +55,30 @@ const ConstellationView = ({
   }, [processedData]);
 
   // ---------------------
+  // Clear trajectories on timezone/filter change
+  useEffect(() => {
+    if (showTrajectories) {
+      // setShowTrajectories(false);
+      setIsAnimating(false);
+      setCurrentTimeStep(0);
+    }
+  }, [selectedTimezone, selectedHour]);
 
+  // -----------------------
   useEffect(() => {
     let animationTimer;
-
     if (isAnimating && trajectoryMarkers.length > 0) {
       animationTimer = setInterval(() => {
         setCurrentTimeStep(prev => {
           const next = prev + 1;
           if (next >= 24) {
             setIsAnimating(false);
-            return 0;
+            // Instead of returning 23, return the last timeStep
+            return prev;  // Keep the last valid position
           }
           return next;
         });
-      }, 1000); // 1 second per step
+      }, 1000);
     }
   
     return () => {
@@ -77,14 +86,22 @@ const ConstellationView = ({
     };
   }, [isAnimating, trajectoryMarkers]);
 
+  //  -----------------------
+  // Stop animation when timezone or hour changes
+  useEffect(() => {
+    if (isAnimating) {
+      setIsAnimating(false);
+    }
+  }, [selectedTimezone, selectedHour]);
+
   // ------------------
   // Add useEffect for timezone filter
   useEffect(() => {
-    if (showTimezoneView && selectedTimezone && fitBoundsFunction) {
+    if (showTimezoneView && selectedTimezone) {
       const visibleMarkers = groupedData[selectedTimezone];
-      fitBoundsFunction(visibleMarkers);
+      fitMarkersInView(visibleMarkers);
     }
-  }, [showTimezoneView, selectedTimezone, fitBoundsFunction]);
+  }, [showTimezoneView, selectedTimezone]);
   
   // ---------------------------------------------
 
@@ -170,7 +187,23 @@ const ConstellationView = ({
   }, []);
 
   // ------------------------------------
-
+  const renderAnimationButton = () => (
+    <button 
+      onClick={() => isAnimating ? setIsAnimating(false) : handleShowTrajectories()}
+      style={{ 
+        marginLeft: "20px",
+        padding: "8px 16px",
+        backgroundColor: isAnimating ? "#ff4444" : "#4CAF50",
+        color: "white",
+        border: "none",
+        borderRadius: "4px",
+        cursor: "pointer",
+        transition: "background-color 0.3s"
+      }}
+    >
+      {isAnimating ? "Stop Movement" : "Show Movement"}
+    </button>
+  );
 
   // --------------------------------------------------------------------------------------------
 
@@ -215,23 +248,7 @@ const ConstellationView = ({
           </select>
         )}
 
-        {showTimezoneView && (
-          <button 
-            onClick={handleShowTrajectories}
-            disabled={isAnimating}
-            style={{ 
-              marginLeft: "20px",
-              padding: "8px 16px",
-              backgroundColor: isAnimating ? "#ccc" : "#4CAF50",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: isAnimating ? "default" : "pointer"
-            }}
-          >
-            Show Balloon Movements
-          </button>
-        )}
+        {showTimezoneView && (renderAnimationButton())}
 
         {!showTimezoneView && (
           <div style={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
@@ -273,7 +290,7 @@ const ConstellationView = ({
           </LayersControl>
   
           {/* Regular markers when not animating */}
-          {!isAnimating && getDisplayData().map((balloon, index) => (
+          {!isAnimating && currentTimeStep === 0 && getDisplayData().map((balloon, index) => (
             // <AutoZoom trajectory={trajectory} />
 
             <Marker 
@@ -326,9 +343,22 @@ const ConstellationView = ({
           {/* ----------------------------------------- */}
 
           {/* Animated markers */}
-          {isAnimating && trajectoryMarkers.map((trajectory, index) => {
-            const currentPosition = trajectory.path.find(p => p.hour === currentTimeStep);
-            if (!currentPosition) return null;
+          {(isAnimating || currentTimeStep > 0) && trajectoryMarkers.map((trajectory, index) => {
+
+              // Find the last valid position up to current timeStep
+            const currentPosition = trajectory.path
+            .filter(p => p.hour <= currentTimeStep)
+            .slice(-1)[0];  // Get the last valid position
+            // const currentPosition = trajectory.path.find(p => p.hour === currentTimeStep);
+
+            const nextPosition = trajectory.path.find(p => p.hour > currentTimeStep);
+
+            // If no current position but have next position, use the last known position
+            const displayPosition = currentPosition || trajectory.path
+            .filter(p => p.hour < currentTimeStep)
+            .slice(-1)[0];
+
+            if (!displayPosition) return null;
 
             // Create path coordinates for trace line
             const pathCoords = trajectory.path
@@ -337,29 +367,27 @@ const ConstellationView = ({
 
             return (
               <React.Fragment key={`animated-${index}`}>
-              <Polyline
-                positions={pathCoords}
-                color={trajectoryColors[index] || '#000'}
-                weight={2}
-                dashArray="5, 10"
-                opacity={0.6}
-              />
-
+                <Polyline
+                  positions={pathCoords}
+                  color={trajectoryColors[index] || '#000'}
+                  weight={2}
+                  dashArray="5, 10"
+                  opacity={0.6}
+                />
                 <DriftMarker
-                  key={`animated-${index}`}
-                  position={[currentPosition.data[0], currentPosition.data[1]]}
+                  position={[displayPosition.data[0], displayPosition.data[1]]}
                   duration={1000}
                   icon={blueMarker}
                 >
                   <Popup>
                     <div>
-                      <strong>Balloon ID:</strong> {currentPosition.data[3]}<br />
+                      <strong>Balloon ID:</strong> {displayPosition.data[3]}<br />
                       <strong>Hour:</strong> {currentTimeStep}<br />
-                      <strong>Altitude:</strong> {currentPosition.data[2].toFixed(2)} km
+                      <strong>Altitude:</strong> {displayPosition.data[2].toFixed(2)} km
+                      {!currentPosition && <div><em>Last known position</em></div>}
                     </div>
                   </Popup>
                 </DriftMarker>
-
               </React.Fragment>
             );
           })}

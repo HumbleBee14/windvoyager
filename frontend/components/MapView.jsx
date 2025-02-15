@@ -126,7 +126,6 @@ const MapView = () => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-
       <div style={{ marginBottom: "1px" }}>
         <button onClick={() => setMode("constellation")} style={{ marginRight: "25px" }}>
           Hourly Constellation View
@@ -137,7 +136,7 @@ const MapView = () => {
       </div>
 
       {mode === "constellation" ? (
-        <ConstellationView 
+        <ConstellationView
           completeData={balloonData}
           processedData={processedData}
           groupedData={groupedData}
@@ -147,8 +146,28 @@ const MapView = () => {
           trackBalloon={handleTrackBalloon}
         />
       ) : (
-        <BalloonTracker balloonData={balloonData} initialBalloonId={selectedBalloonId} />
+        <BalloonTracker
+          balloonData={balloonData}
+          initialBalloonId={selectedBalloonId}
+        />
       )}
+
+      <div style={{ marginTop: "20px", width: "100%", borderTop: "1px solid #ccc", paddingTop: "10px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <a
+          href="https://www.linkedin.com/in/dineshyd/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}
+          >
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/174/174857.png"
+            alt="LinkedIn"
+            style={{ width: "24px", height: "24px", marginRight: "8px" }}
+            />
+            Developer: Dinesh Yadav 
+        </a>
+        <p style={{ marginBottom: "8px" }}>Balloon trajectory dataset courtesy of WindBorne Systems</p>
+      </div>
     </div>
   );
 };
