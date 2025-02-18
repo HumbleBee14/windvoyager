@@ -345,16 +345,13 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
         )}
 
         {/* __________________________ PLOT Graph ________________________ */}
-        <button 
-            className="chart-button"
-            onClick={() => setShowChart(true)}
-            style={{position: 'absolute', top: '20px', right: '20px', zIndex: 1000}} >
-            Show Flight Metrics
+        <button className="chart-button" onClick={() => setShowChart(true)} >
+          Show Flight Metrics
         </button>
 
         {showChart && (
             <Modal onClose={() => setShowChart(false)}>
-                <BalloonChart trajectoryData={balloonDataLog} onClose={() => setShowChart(false)} />
+                <BalloonChart trajectoryData={balloonDataLog} onClose={() => setShowPopup(false)} />
             </Modal>
         )}
 

@@ -265,7 +265,7 @@ const BalloonChart = ({ trajectoryData, onClose }) => {
                         yAxisId="hiddenAscent"
                         type="monotone" 
                         dataKey="ascentRateNormalized" 
-                        stroke="#4B3A26"
+                        stroke="#8B5E3B"
                         strokeOpacity={visibleLines.ascentRate ? 0.8 : 0}  
                         strokeDasharray="5 5"
                         name="Ascent Rate (ft/min)"
@@ -277,7 +277,7 @@ const BalloonChart = ({ trajectoryData, onClose }) => {
                         yAxisId="hiddenAccel"
                         type="monotone" 
                         dataKey="accelerationNormalized" 
-                        stroke="#00B2CA"
+                        stroke="#006D77"
                         strokeOpacity={visibleLines.acceleration ? 0.8 : 0} 
                         strokeDasharray="5 5"
                         name="Acceleration (m/s²)"

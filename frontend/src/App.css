@@ -1,7 +1,7 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0rem;
   text-align: center;
 }
 
@@ -59,5 +59,32 @@
 
 /* ------------------ */
 
-@import "leaflet/dist/leaflet.css";
+/* @import "leaflet/dist/leaflet.css"; */
 
+/* ------------------------- */
+@keyframes moveClouds {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+.cloud-overlay {
+  position: absolute;
+  top: 15px; /* Adjust the position to hover over h1 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 250px;  /* Smaller size */
+  opacity: 0.3;  /* Lighter effect */
+  pointer-events: none;  /* Prevent blocking clicks */
+  animation: moveClouds 10s linear infinite alternate;  /* Smooth left-right movement */
+}
+
+.header-title {
+  position: relative;
+  margin-top: 5px;
+  margin-bottom: 8px;
+  z-index: 10; /* Ensure the header remains readable */
+  text-shadow: 1px 1px 3px rgba(245, 18, 18, 0.5);
+}
+
+
+/* ----------------------- */
