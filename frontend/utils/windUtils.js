@@ -45,23 +45,81 @@ export function calculateScatteredWindSpeedDirection(lat1, lon1, lat2, lon2, pre
     const totalDistance = Math.sqrt(horizontalDistance ** 2 + altitudeDiff ** 2);
     
     const hoursElapsed = prevHour - currHour;
-    const speed = (totalDistance * 1000) / (hoursElapsed * 3600);
+    const speed = (totalDistance * 1000) / (hoursElapsed * 3600); // Speed in m/s
     
     const direction = turf.bearing(point2, point1);
 
     return {
-        speed: parseFloat(speed.toFixed(2)), 
+        speed: parseFloat(speed.toFixed(5)), 
         direction: parseFloat(direction.toFixed(2))
     };
 }
+
+
+// ------------------------------------------------------------------------------
+// Helper functions
+
+export const calculateBalloonMetrics = (currentData, lastValidData) => {
+    if (!lastValidData) {
+        return {
+            ascentRate: "-",
+            acceleration: "-"
+        };
+    }
+
+    const {
+        alt: currentAlt,
+        hour: currentHour
+    } = currentData;
+
+    const {
+        alt: lastAlt,
+        hour: lastHour,
+        windSpeed: lastSpeed
+    } = lastValidData;
+
+    // Time difference in hours
+    const hoursDiff = lastHour - currentHour;
+    const secondsElapsed = hoursDiff * 3600;
+
+    // Calculate ascent rate (ft/min)
+    const altitudeDiffKm = currentAlt - lastAlt;
+    const altitudeDiffFeet = altitudeDiffKm * 3280.84; // Convert km to feet
+    const ascentRate = (altitudeDiffFeet / (hoursDiff * 60)); // ft/min
+
+    // Calculate acceleration (m/s²) if we have previous wind speed
+    console.log('For Hour:', currentHour);
+    console.log('lastSpeed:', lastSpeed);
+    console.log('currentWindSpeed:', currentData.windSpeed);
+    console.log('secondsElapsed:', secondsElapsed);
+    const acceleration = lastSpeed !== "-" ? 
+        (currentData.windSpeed - lastSpeed) / secondsElapsed : 
+        "-";
+    console.log('calculated acceleration:', acceleration);
+
+    // return {
+    //     ascentRate: parseFloat(ascentRate.toFixed(2)),
+    //     acceleration: acceleration !== "-" ? parseFloat(acceleration.toFixed(2)) : "-"
+    // };
+
+    return {
+        ascentRate: parseFloat(ascentRate.toFixed(10)),
+        acceleration: acceleration !== "-" ? parseFloat(acceleration.toFixed(10)) : "-"
+    };
+};
+
+  
+  
+// ------------------------------------------------------------------------------
 
 /**
  * Convert wind direction degrees into compass direction (N, NE, E, SE, etc.)
  */
 export function getCompassDirection(degrees) {
-    const directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", 
-                        "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
-    const index = Math.round(degrees / 22.5) % 16;
+    const directions = ["N", "N-NE", "NE", "E-NE", "E", "E-SE", "SE", "S-SE", 
+                       "S", "S-SW", "SW", "W-SW", "W", "W-NW", "NW", "N-NW"];
+    const normalizedDegrees = ((degrees % 360) + 360) % 360;
+    const index = Math.round(normalizedDegrees / 22.5) % 16;
     return directions[index];
 }
 

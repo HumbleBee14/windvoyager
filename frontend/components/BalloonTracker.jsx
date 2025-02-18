@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Popup, LayersControl, useMap } from "react-leaflet";
-import BalloonDataPopup from "./BalloonDataPopup";
-import LeafletVelocity from "./LeafletVelocity";
-import { calculateTrajectoryWindSpeedDirection, getCompassDirection, computeScatteredWindData } from "../utils/windUtils";
+import BalloonDataPopup from "./subcomponents/BalloonDataPopup";
+import LeafletVelocity from "./subcomponents/LeafletVelocity";
+import { calculateTrajectoryWindSpeedDirection, getCompassDirection, computeScatteredWindData, calculateBalloonMetrics } from "../utils/windUtils";
 import { generateWindGridData } from "../utils/windy";
-import Modal from './Modal';
-import BalloonChart from "./BalloonChart";
+import Modal from './subcomponents/Modal';
+import BalloonChart from "./subcomponents/BalloonChart";
 import L from "leaflet";
-import "./BalloonDataPopup.css";
+import "./subcomponents/BalloonDataPopup.css";
 import "leaflet/dist/leaflet.css";
 
 // --------------------------------------------------------------------------
@@ -174,7 +174,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
     const missingTimestamps = new Set();
     const balloonLog = [];
   
-    let lastValidLatitude = null, lastValidLongitude = null, lastValidAltitude = null, lastValidHour = null;
+    let lastValidLatitude = null, lastValidLongitude = null, lastValidAltitude = null, lastValidHour = null, lastWindSpeed = null;
 
   
     for (let hour = 23; hour >= 0; hour--) {
@@ -197,11 +197,21 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
         });
 
         let windData = { speed: "-", direction: "-", compass: "-" };
+        let metrics = {ascentRate: "-", acceleration: "-"};
 
         // Compute wind profile ONLY if a valid previous hour exists
         if (lastValidHour !== null) {
           windData = calculateTrajectoryWindSpeedDirection(
               lastValidLatitude, lastValidLongitude, lat, lon, lastValidHour, hour, lastValidAltitude, alt
+          );
+
+           metrics = calculateBalloonMetrics(
+            { alt, hour, windSpeed: windData.speed },
+            { 
+                alt: lastValidAltitude, 
+                hour: lastValidHour,
+                windSpeed: lastWindSpeed
+            }
           );
 
           if (windData.direction !== "-") {
@@ -218,6 +228,8 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
             windSpeed: windData.speed,
             windDirection: windData.direction,
             windCompass: windData.compass,
+            ascentRate: metrics.ascentRate,
+            acceleration: metrics.acceleration,
             balloonId: id,
             type: "Recorded"
         });
@@ -263,10 +275,11 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
         lastValidLongitude = lon; // Update last valid longitude (needed for wrap around problem)
         lastValidAltitude = alt;
         lastValidHour = hour;
+        lastWindSpeed = windData.speed;
 
       } else {
         // Track missing hour
-        balloonLog.push({ hour, lat: "-", lon: "-", alt: "-", windSpeed: "-", windDirection: "-", balloonId: balloonId, windCompass: "-", type: "Missing" });
+        balloonLog.push({ hour, lat: "-", lon: "-", alt: "-", windSpeed: "-", windDirection: "-",  windCompass: "-", ascentRate: "-", acceleration: "-", balloonId: balloonId, type: "Missing" });
         missingTimestamps.add(hour);
       }
     }
@@ -277,6 +290,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
     setMissingHours(new Set([...missingTimestamps].reverse()));
 
     // console.log(`Missing Hours: ${Array.from(missingTimestamps).join(", ")}`);
+    console.log(JSON.stringify(balloonLog));
   };
 
 
@@ -284,7 +298,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
   // --------------------------------------------------------------------------------
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100vw" }}>
+    <div className="balloon-tracker" style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100vw" }}>
 
       {/* Control Panel */}
       <div style={{ display: "flex", justifyContent: "space-between", width: "90%", padding: "10px 20px", alignItems: "center" }}>

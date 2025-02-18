@@ -35,23 +35,36 @@ const BalloonDataPopup = ({ data, balloonId, onClose }) => {
             <th>Latitude</th>
             <th>Longitude</th>
             <th>Altitude</th>
-            <th>Wind Speed (m/s)</th>
+            <th>Ascent Rate (ft/min)</th>
+            <th>Wind Speed (km/hr)</th>
+            {/* <th>Acceleration (km/h²)</th> */}
             <th>Wind Direction (°)</th>
-            <th>Compass</th>
+            {/* <th>Compass</th> */}
             {/* <th>Type</th> */}
-            </tr>
-          </thead>
+                  </tr>
+                  </thead>
 
-          <tbody>
-            {data.map((entry, index) => (
-              <tr key={index} className={entry.type.includes("Missing") ? "missing-row" : "recorded-row"}>
-                <td>{entry.hour}H</td>
-                <td>{entry.lat !== "-" ? entry.lat.toFixed(5) : "-"}</td>
-                <td>{entry.lon !== "-" ? entry.lon.toFixed(5) : "-"}</td>
-                <td>{entry.alt !== "-" ? entry.alt.toFixed(2) : "-"}</td>
-                <td>{entry.windSpeed !== "-" ? `${entry.windSpeed}` : "-"}</td>
-                <td>{entry.windDirection !== "-" ? `${entry.windDirection}`+ "°" : "-"}</td>
-                <td>{entry.windCompass !== "-" ? entry.windCompass : "-"}</td>
+                  <tbody>
+                  {data.map((entry, index) => (
+                    <tr key={index} className={entry.type.includes("Missing") ? "missing-row" : "recorded-row"}>
+                    <td>{entry.hour}H</td>
+                    <td>{entry.lat !== "-" ? entry.lat.toFixed(5) : "-"}</td>
+                    <td>{entry.lon !== "-" ? entry.lon.toFixed(5) : "-"}</td>
+                    <td>{entry.alt !== "-" ? entry.alt.toFixed(2) : "-"}</td>
+                    
+                    <td>
+                      {entry.ascentRate !== "-" ? (
+                      <>
+                        {entry.ascentRate.toFixed(2)}
+                        {entry.ascentRate > 0 ? " ↑" : entry.ascentRate < 0 ? " ↓" : ""}
+                      </>
+                      ) : "-"}
+                    </td>
+
+                    <td>{entry.windSpeed !== "-" ? `${(entry.windSpeed * 3.6).toFixed(1)}` : "-"}</td>
+                    {/* <td>{entry.acceleration !== "-" ? `${(entry.acceleration * 12.96).toFixed(7)}` : "-"}</td> */}
+                    <td>{entry.windDirection !== "-" ? `${entry.windDirection}°${entry.windCompass !== "-" ? '(' + entry.windCompass + ')': ""}` : "-"}</td>
+                    {/* <td>{entry.windCompass !== "-" ? entry.windCompass : "-"}</td> */}
                 {/* <td className={entry.type.includes("Missing") ? "missing-text" : "recorded-text"}>{entry.type}</td> */}
               </tr>
             ))}
