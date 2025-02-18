@@ -36,13 +36,10 @@ const BalloonDataPopup = ({ data, balloonId, onClose }) => {
             <th>Longitude</th>
             <th>Altitude</th>
             <th>Ascent Rate (ft/min)</th>
-            <th>Wind Speed (km/hr)</th>
-            {/* <th>Acceleration (km/h²)</th> */}
+            <th style={{ width: '90px' }}>Wind Speed</th>
             <th>Wind Direction (°)</th>
-            {/* <th>Compass</th> */}
-            {/* <th>Type</th> */}
-                  </tr>
-                  </thead>
+            </tr>
+            </thead>
 
                   <tbody>
                   {data.map((entry, index) => (
@@ -61,11 +58,9 @@ const BalloonDataPopup = ({ data, balloonId, onClose }) => {
                       ) : "-"}
                     </td>
 
-                    <td>{entry.windSpeed !== "-" ? `${(entry.windSpeed * 3.6).toFixed(1)}` : "-"}</td>
-                    {/* <td>{entry.acceleration !== "-" ? `${(entry.acceleration * 12.96).toFixed(7)}` : "-"}</td> */}
+                    <td style={{ width: '90px' }}>{entry.windSpeed !== "-" ? `${(entry.windSpeed * 3.6).toFixed(1)}`+
+                    " km/hr" : "-"}</td>
                     <td>{entry.windDirection !== "-" ? `${entry.windDirection}°${entry.windCompass !== "-" ? '(' + entry.windCompass + ')': ""}` : "-"}</td>
-                    {/* <td>{entry.windCompass !== "-" ? entry.windCompass : "-"}</td> */}
-                {/* <td className={entry.type.includes("Missing") ? "missing-text" : "recorded-text"}>{entry.type}</td> */}
               </tr>
             ))}
           </tbody>

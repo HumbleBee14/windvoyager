@@ -1,44 +1,167 @@
-import React from 'react';
+import React, {useEffect, useState } from 'react';
 import { 
     LineChart, Line, XAxis, YAxis, CartesianGrid, 
     Tooltip, Legend, ResponsiveContainer, ReferenceArea 
 } from 'recharts';
 
 
-const BalloonChart = ({ trajectoryData }) => {
+const BalloonChart = ({ trajectoryData, onClose }) => {
+
+    // Handle ESC Key to close the popup
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event.key === "Escape") {
+                onClose();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        
+        // Cleanup when unmounting
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [onClose]);
+
+    // ------------------------------------------------------
+    // Track visibility of each line
+    const [visibleLines, setVisibleLines] = useState({
+        altitude: true,
+        windSpeed: true,
+        ascentRate: true,
+        acceleration: true
+    });
+
+    // Toggle visibility of a line when its legend is clicked
+    const handleLegendClick = (event) => {
+        const { dataKey } = event;
+    
+        // Map normalized keys back to state tracking keys
+        const keyMap = {
+            altitude: "altitude",
+            windSpeed: "windSpeed",
+            ascentRateNormalized: "ascentRate",
+            accelerationNormalized: "acceleration",
+        };
+    
+        const targetKey = keyMap[dataKey];
+    
+        setVisibleLines((prev) => ({
+            ...prev,
+            [targetKey]: !prev[targetKey], // Toggle correct key
+        }));
+    };
+
+    // ======================================================
+    // Normalizer
+    const normalizeData = (data, key, scaleFactor = 100, bufferPercent = 0.1) => {
+        // Find min and max of non-null values
+        const values = data.filter(d => d[key] !== null).map(d => d[key]);
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const range = max - min;
+
+        // Add buffer to range
+        const bufferAmount = range * bufferPercent;
+        const adjustedMin = min - bufferAmount;
+        const adjustedRange = range + (2 * bufferAmount);
+    
+        // Add normalized version of the key
+        const normalizedData = data.map(point => ({
+            ...point,
+            [`${key}Normalized`]: point[key] === null ? null : 
+            ((point[key] - adjustedMin) / adjustedRange) * scaleFactor
+        }));
+
+        return normalizedData;
+    };
+
+
     // Format data for Recharts
     const lastValidPoint = [...trajectoryData].reverse().find(point => point.type !== "Missing" );
     const endHour = lastValidPoint ? lastValidPoint.hour : 23;
     
     // Add future point first
-    const chartData = [{
-        timeLabel: '+1h',
-        altitude: null,
+    let chartData = [{
         hour: endHour + 1,
-        windSpeed: null,
+        timeLabel: '+1h',
         latitude: null,
-        longitude: null
+        longitude: null,
+        altitude: null,
+        windSpeed: null,
+        ascentRate: null,
+        ascentRateNormalized: null,
+        acceleration: null,
+        accelerationNormalized: null
     }];
 
     // Then add the filtered trajectory data
     chartData.push(...trajectoryData
         .filter(point => point.hour <= endHour)
         .map(point => ({
-            timeLabel: point.hour === 0 ? 'now' : `${point.hour}h ago`,
-            altitude: point.alt === "-" ? null : point.alt,
-            windSpeed: point.windSpeed === "-" ? null : point.windSpeed,
             hour: point.hour,
+            timeLabel: point.hour === 0 ? 'now' : `${point.hour}h ago`,
             latitude: point.lat === "-" ? null : point.lat,
-            longitude: point.lon === "-" ? null : point.lon
+            longitude: point.lon === "-" ? null : point.lon,
+            altitude: point.alt === "-" ? null : point.alt,
+            ascentRate: point.ascentRate === "-" ? null : point.ascentRate,
+            ascentRateNormalized: null,    // Will be filled by normalizeData
+            windSpeed: point.windSpeed === "-" ? null : point.windSpeed,
+            acceleration: point.acceleration === "-" ? null : point.acceleration,
+            accelerationNormalized: null,
         }))
     );
+
+    // Normalize acceleration and ascent rate
+    // chartData = normalizeData(chartData, 'acceleration', 10000, 0.1);
+    chartData = normalizeData(chartData, 'acceleration', 1, 0.1);
+    chartData = normalizeData(chartData, 'ascentRate', 1, 0.1);
+
+    
+    // Print the normalized data for debugging
+    // console.log(`Normalized data:`, chartData);
+
+    // --------------------------------------------------------------------------
+
+    // CustomTooltip - showing original values when normalized ones are plotted
+    const CustomTooltip = ({ active, payload, label }) => {
+        if (active && payload && payload.length) {
+            return (
+                <div style={{ backgroundColor: 'white', padding: '10px', border: '1px solid #ccc' }}>
+                    <p style={{ color: '#333', fontWeight: 'bold', borderBottom: '1px solid #ccc'}}>{`Time: ${label}`}</p>
+
+                    {payload.map((entry) => {
+                        // If it's a normalized field, get the original field name
+                        const dataKey = entry.dataKey;
+                        if (dataKey.includes('Normalized')) {
+                            const originalKey = dataKey.replace('Normalized', '');
+                            // Get original value from payload
+                            const originalValue = entry.payload[originalKey];
+                            return (
+                                <p key={dataKey} style={{ color: entry.color }}>
+                                    {`${entry.name}: ${originalValue?.toFixed(7) || 'N/A'}`}
+                                </p>
+                            );
+                        }
+                        // For non-normalized fields, show as is
+                        return (
+                            <p key={dataKey} style={{ color: entry.color }}>
+                                {`${entry.name}: ${entry.value?.toFixed(4) || 'N/A'}`}
+                            </p>
+                        );
+                    })}
+                </div>
+            );
+        }
+        return null;
+    };
     
     //  -------------------------------------------------------------------------
     return (
         <div style={{ width: '100%', height: 450 }}>
             <ResponsiveContainer>
                 <LineChart data={chartData} margin={{ top: 4, right: 15, left: 15, bottom: 30 }}>
-
+                    {/* Atmospheric Layers */}
                     <defs>
                         <linearGradient id="troposphereColor" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor="#87CEEB" stopOpacity={0.2}/>
@@ -50,7 +173,6 @@ const BalloonChart = ({ trajectoryData }) => {
                         </linearGradient>
                     </defs>
 
-                    {/* Atmospheric layers */}
                     <ReferenceArea 
                         yAxisId="left"
                         y1={0} 
@@ -78,27 +200,19 @@ const BalloonChart = ({ trajectoryData }) => {
                         textAnchor="end"
                         height={80}
                     />
-                    <YAxis 
-                        yAxisId="left" 
-                        label={{ 
-                            value: 'Altitude (km)', 
-                            angle: -90, 
-                            position: 'insideLeft' 
-                        }}
-                    />
-                    <YAxis 
-                        yAxisId="right" 
-                        orientation="right"
-                        label={{ 
-                            value: 'Wind Speed (m/s)', 
-                            angle: 90, 
-                            position: 'insideRight' 
-                        }}
-                    />
+
+                    <YAxis yAxisId="left" label={{ value: 'Altitude (km)', angle: -90, position: 'insideLeft' }} />
+
+                    <YAxis yAxisId="right" orientation="right" label={{ value: 'Wind Speed (m/s)', angle: 90, position: 'insideRight' }} />
+
+                    <YAxis yAxisId="hiddenAscent" hide={true} />
+                    <YAxis yAxisId="hiddenAccel" hide={true} />
+
                     
-                    <Tooltip />
+                    <Tooltip content={<CustomTooltip />} />
 
                     <Legend 
+                        onClick={handleLegendClick}
                         verticalAlign="bottom" 
                         height={1}
                         // wrapperStyle={{
@@ -127,7 +241,8 @@ const BalloonChart = ({ trajectoryData }) => {
                         yAxisId="left"
                         type="natural" 
                         dataKey="altitude" 
-                        stroke="#4B3A26" 
+                        stroke="#4B3A26"
+                        strokeOpacity={visibleLines.altitude ? 1 : 0}  
                         name="Altitude (km)"
                         connectNulls={true}
                         strokeWidth={2}
@@ -137,15 +252,46 @@ const BalloonChart = ({ trajectoryData }) => {
                         yAxisId="right"
                         type="monotone" 
                         dataKey="windSpeed" 
-                        stroke="#00B2CA" 
+                        stroke="#00B2CA"
+                        strokeOpacity={visibleLines.windSpeed ? 1 : 0}  
                         name="Wind Speed (m/s)"
                         connectNulls={true}
                         strokeWidth={2}
                         markerStart="url(#arrow)"
                     />
+
+                    {/* Dotted Line for Ascent rate & Acceleration (NO Y-AXIS, JUST FOR PATTERN) */}
+                    <Line 
+                        yAxisId="hiddenAscent"
+                        type="monotone" 
+                        dataKey="ascentRateNormalized" 
+                        stroke="#4B3A26"
+                        strokeOpacity={visibleLines.ascentRate ? 0.8 : 0}  
+                        strokeDasharray="5 5"
+                        name="Ascent Rate (ft/min)"
+                        connectNulls={true}
+                        strokeWidth={1}
+                    />
+
+                    <Line
+                        yAxisId="hiddenAccel"
+                        type="monotone" 
+                        dataKey="accelerationNormalized" 
+                        stroke="#00B2CA"
+                        strokeOpacity={visibleLines.acceleration ? 0.8 : 0} 
+                        strokeDasharray="5 5"
+                        name="Acceleration (m/s²)"
+                        connectNulls={true}
+                        strokeWidth={1}
+                    />
                     
                 </LineChart>
             </ResponsiveContainer>
+
+            <p style={{ textAlign: "center", fontSize: "12px", color: "gray", marginTop: "0px" }}>
+                Click legend to show/hide lines
+            </p>
+
         </div>
     );
 };

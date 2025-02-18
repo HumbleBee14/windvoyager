@@ -290,7 +290,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
     setMissingHours(new Set([...missingTimestamps].reverse()));
 
     // console.log(`Missing Hours: ${Array.from(missingTimestamps).join(", ")}`);
-    console.log(JSON.stringify(balloonLog));
+    // console.log(balloonLog);
   };
 
 
@@ -306,11 +306,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
           
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <label style={{ fontWeight: "bold" }}>Track Balloon #: </label>
-            <input
-              type="number"
-              min="1"
-              max="1000"
-              value={balloonId}
+            <input type="number" min="1" max="1000" value={balloonId}
               onChange={(e) => {
                 const value = parseInt(e.target.value, 10) || 1;
                 setBalloonId(value);
@@ -353,12 +349,12 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
             className="chart-button"
             onClick={() => setShowChart(true)}
             style={{position: 'absolute', top: '20px', right: '20px', zIndex: 1000}} >
-            Show Trajectory Charts
+            Show Flight Metrics
         </button>
 
         {showChart && (
             <Modal onClose={() => setShowChart(false)}>
-                <BalloonChart trajectoryData={balloonDataLog} />
+                <BalloonChart trajectoryData={balloonDataLog} onClose={() => setShowChart(false)} />
             </Modal>
         )}
 

@@ -88,14 +88,10 @@ export const calculateBalloonMetrics = (currentData, lastValidData) => {
     const ascentRate = (altitudeDiffFeet / (hoursDiff * 60)); // ft/min
 
     // Calculate acceleration (m/s²) if we have previous wind speed
-    console.log('For Hour:', currentHour);
-    console.log('lastSpeed:', lastSpeed);
-    console.log('currentWindSpeed:', currentData.windSpeed);
-    console.log('secondsElapsed:', secondsElapsed);
     const acceleration = lastSpeed !== "-" ? 
         (currentData.windSpeed - lastSpeed) / secondsElapsed : 
         "-";
-    console.log('calculated acceleration:', acceleration);
+    // console.log('calculated acceleration:', acceleration);
 
     // return {
     //     ascentRate: parseFloat(ascentRate.toFixed(2)),
