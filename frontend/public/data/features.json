@@ -1,0 +1,35 @@
+{
+    "features": [
+      {
+        "title": "Constellation View",
+        "description": "View all active balloons in real-time",
+        "image": "https://example.com/features/constellation.png"
+      },
+      {
+        "title": "Individual Balloon Tracking",
+        "description": "Track single balloon with detailed metrics",
+        "image": "https://example.com/features/tracking.png"
+      },
+      {
+        "title": "Satellite Overlay",
+        "description": "Toggle between map and satellite views",
+        "image": "https://example.com/features/satellite.png"
+      },
+      {
+        "title": "Wind Velocity Layer",
+        "description": "Visualize wind patterns and speeds",
+        "image": "https://example.com/features/wind.png"
+      },
+      {
+        "title": "Analytics Charts",
+        "description": "View altitude and trajectory analytics",
+        "image": "https://example.com/features/charts.png"
+      },
+      {
+        "title": "Data Logger",
+        "description": "Access detailed balloon telemetry",
+        "image": "https://example.com/features/logger.png"
+      }
+    ]
+  }
+  

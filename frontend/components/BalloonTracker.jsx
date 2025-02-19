@@ -7,7 +7,7 @@ import { generateWindGridData } from "../utils/windy";
 import Modal from './subcomponents/Modal';
 import BalloonChart from "./subcomponents/BalloonChart";
 import L from "leaflet";
-import "./subcomponents/BalloonDataPopup.css";
+import "./styles/BalloonDataPopup.css";
 import "leaflet/dist/leaflet.css";
 
 // --------------------------------------------------------------------------

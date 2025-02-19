@@ -1,0 +1,23 @@
+{
+    "milestones": [
+      {
+        "title": "Initial Map Integration",
+        "description": "Implemented basic map with balloon markers",
+        "commitHash": "a1b2c3d",
+        "commitImage": "https://example.com/commits/initial-map.png"
+      },
+      {
+        "title": "Trajectory Visualization",
+        "description": "Added path tracking and direction indicators",
+        "commitHash": "e4f5g6h",
+        "commitImage": "https://example.com/commits/trajectory.png"
+      },
+      {
+        "title": "Wind Data Integration",
+        "description": "Implemented wind velocity overlay",
+        "commitHash": "i7j8k9l",
+        "commitImage": "https://example.com/commits/wind-data.png"
+      }
+    ]
+  }
+  
