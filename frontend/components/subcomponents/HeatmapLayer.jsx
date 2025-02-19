@@ -1,13 +1,20 @@
-import { useEffect } from 'react';
-import { useMap } from 'react-leaflet';
-import L from 'leaflet';
+import { forwardRef, useEffect, useState } from "react";
+import { useMap } from "react-leaflet";
+import L from "leaflet";
 import 'leaflet.heat';
 
-const HeatmapLayer = ({ points, options = {} }) => {
-  const map = useMap();
+const HeatmapLayer = forwardRef(({ points }, ref) => {
+    const map = useMap();
+    const [heatLayer, setHeatLayer] = useState(null);
 
-  useEffect(() => {
-    if (!map || !points.length) return;
+    useEffect(() => {
+        if (!map || !points.length || !ref.current) return;
+
+    // Remove existing layer if any
+    if (heatLayer) {
+        map.removeLayer(heatLayer);
+        ref.current.removeLayer(heatLayer);
+    }
 
     // Configure default options
     const defaultOptions = {
@@ -25,22 +32,31 @@ const HeatmapLayer = ({ points, options = {} }) => {
     };
 
     // Create heatmap layer
-    const heatLayer = L.heatLayer(points, {
+    const newHeatLayer  = L.heatLayer(points, {
       ...defaultOptions,
-      ...options
     });
+
+    // Add to layer control
+    ref.current.addOverlay(newHeatLayer, "Heatmap");
+    setHeatLayer(newHeatLayer);
 
     // Add to map
     // map.addLayer(heatLayer);
-    heatLayer.addTo(map);
+    // heatLayer.addTo(map);
 
-    // Cleanup on unmount
+
     return () => {
-      map.removeLayer(heatLayer);
-    };
-  }, [map, points, options]);
-
-  return null;
-};
+        if (map.hasLayer(newHeatLayer)) {
+          map.removeLayer(newHeatLayer);
+        }
+        if (ref.current) {
+          ref.current.removeLayer(newHeatLayer);
+        }
+      };
+    }, [map, points, ref]);
+  
+    return null;
+  });
+  
 
 export default HeatmapLayer;

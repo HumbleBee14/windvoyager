@@ -482,6 +482,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
               <LayersControl.Overlay name="Temperature Heatmap">
                 <HeatmapLayer 
+                  ref={layerControlRef}
                   points={originalTrajectoryData.map(point => [
                     point.position[0],
                     point.position[1],
