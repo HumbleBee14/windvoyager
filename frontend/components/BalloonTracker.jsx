@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Popup, LayersControl, useMap } from "react-leaflet";
 import BalloonDataPopup from "./subcomponents/BalloonDataPopup";
 import LeafletVelocity from "./subcomponents/LeafletVelocity";
+import { fetchWeatherForTrajectory, mapWeatherToTrajectory } from "../services/weatherService";
 import { calculateTrajectoryWindSpeedDirection, getCompassDirection, computeScatteredWindData, calculateBalloonMetrics } from "../utils/windUtils";
 import { generateWindGridData } from "../utils/windy";
 import Modal from './subcomponents/Modal';
@@ -77,7 +78,7 @@ const AddArrowheads = ({ trajectory }) => {
 
 const BalloonTracker = ({balloonData, initialBalloonId }) => {
   const [balloonId, setBalloonId] = useState(initialBalloonId  || 1);
-  const [trajectory, setTrajectory] = useState([]); // Stores only valid recorded data (adjusted for map)
+  const [trajectory, setTrajectory] = useState([]); // Stores modified data (adjusted for map - wraparound fix)
   const [originalTrajectoryData, setOriginalTrajectoryData] = useState([]); // Stores unmodified original data
   const [missingHours, setMissingHours] = useState(new Set()); // Stores missing hour timestamps
   const [balloonDataLog, setBalloonDataLog] = useState([]);
@@ -92,6 +93,13 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
   }, [balloonId, balloonData]);
 
   useEffect(() => {
+    if (originalTrajectoryData.length > 0) {
+        fetchAndAttachWeather();
+    }
+  }, [trajectory]);
+
+
+  useEffect(() => {
     if (initialBalloonId) {
       setBalloonId(initialBalloonId);
     }
@@ -99,7 +107,9 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
   useEffect(() => {
     processWindData();
-  }, [balloonId, originalTrajectoryData]);
+  }, [balloonId]);
+  // }, [balloonId, originalTrajectoryData]);
+  
 
   // ------------------------------------------------------
   const processWindData = () => {
@@ -164,6 +174,26 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
     return null;
   };
   
+  // ------------------------------------------------------
+
+  const fetchAndAttachWeather = async () => {
+    try {
+        const weatherData = await fetchWeatherForTrajectory(originalTrajectoryData);
+
+        if (!weatherData) {
+          console.warn("No weather data retrieved. Unable to update trajectory.");
+          return;
+        }
+        const updatedTrajectory = mapWeatherToTrajectory(originalTrajectoryData, weatherData);
+        console.log("Updated Trajectory with Weather:", updatedTrajectory);
+        
+        setOriginalTrajectoryData(updatedTrajectory);  // Update state with weather data
+
+    } catch (error) {
+        console.error("Error fetching weather data:", error);
+    }
+  };
+
   // ------------------------------------------------------
 
   const extractBalloonTrajectory = () => {
