@@ -23,9 +23,11 @@ export const AboutProject = () => {
             <h3>How It Works?</h3>
             <ul>
                 <li> Fetches <b>real-time balloon positions</b> from WindBorne Systems.</li>
-                <li> Retrieves <b>weather data</b> (temperature, pressure, wind speed) via <b>OpenMeteo API</b> (Under Development).</li>
+                <li> Calculates <b>derived metrics</b> including wind vectors, balloon velocity, acceleration, and vertical rates (ascent-descent) using existing telemetry data.</li>
+                <li> Retrieves <b>weather data</b> (temperature, pressure and other weather-related data) via <b>OpenMeteo API</b> (Under Development).</li>
+                <li> Interpolates <b>missing data points</b> using statistical methods and machine learning algorithms (Future).</li>
+                <li> Predicts <b>future balloon movement</b>, altitude changes, and weather conditions using ML model trained on historical inputs and current telemetry.</li>
                 <li> Processes & <b>visualizes</b> trajectory paths over time.</li>
-                <li>Uses <b>ML models</b> (future) to predict balloon movement.</li>
             </ul>
 
             <h3>Use Cases</h3>
@@ -45,8 +47,8 @@ export const AboutMe = () => {
             <p>
                 Passionate about <b>software development</b>, <b>system design</b>, and <b>problem-solving</b>.  
                 I love building systems that solve real-world challenges efficiently.  
-                Currently, I am working on <b>WindVoyager</b>, a real-time <b>weather balloon tracking system </b>  
-                that integrates <b>OpenMeteo API</b> for weather analytics and ML-based trajectory predictions.
+                Currently, here I am working on building <b>WindVoyager</b>, a real-time <b>weather balloon tracking system </b>  
+                that integrates primarily the weather balloon's telemetry data from <b>WindBorne Systems</b> and <b>OpenMeteo API</b> for weather analytics, and I plan to integrate ML-based trajectory predictions.
             </p>
 
             <h3>Education</h3>
@@ -57,7 +59,7 @@ export const AboutMe = () => {
 
             <h3>Work Experience</h3>
             <ul>
-                <li><b>Prior Work:</b> Experience in <b>backend development</b>, using <b>Java (Spring Boot)</b> and <b>Node.js (Express.js)</b>.</li>
+                <li><b>Prior Work:</b> Experience in <b>backend development</b>, using <b>Java (Spring Boot)</b>, <b>Node.js (Express.js), Python</b>.</li>
                 {/* <li><b>Key Contributions:</b> Built <b>scalable APIs</b>, microservices.</li> */}
             </ul>
 
@@ -69,11 +71,11 @@ export const AboutMe = () => {
 
             <h3>Profiles & Links</h3>
             <ul>
-                
-                <li>💼 <b>LinkedIn:</b> <a href="#" target="_blank">https://www.linkedin.com/in/dineshyd/</a></li>
-                <li>👨‍💻 <b>GitHub:</b> <a href="#" target="_blank">https://github.com/HumbleBee14</a></li>
-                <li>✍ <b>Medium:</b> <a href="#" target="_blank">https://medium.com/@humble_bee</a></li>
-                <li>🌎 <b>Portfolio:</b> <a href="#" target="_blank">https://dineshyd.vercel.app</a></li>
+                <li>💼 <b>LinkedIn:</b> <a href="https://www.linkedin.com/in/dineshyd/" target="_blank">https://www.linkedin.com/in/dineshyd/</a></li>
+                <li>👨‍💻 <b>GitHub:</b> <a href="https://github.com/HumbleBee14" target="_blank">https://github.com/HumbleBee14</a></li>
+                <li>✍ <b>Medium:</b> <a href="https://medium.com/@humble_bee" target="_blank">https://medium.com/@humble_bee</a></li>
+                <li>🌎 <b>Portfolio:</b> <a href="https://dineshyd.vercel.app" target="_blank">https://dineshyd.vercel.app</a></li>
+                <li>📝 <b>Blogging Platform (Project):</b> <a href="https://grepguru.com" target="_blank">https://grepguru.com</a></li>
             </ul>
         </div>
     );
