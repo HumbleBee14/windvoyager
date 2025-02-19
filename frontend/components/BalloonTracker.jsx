@@ -2,12 +2,15 @@ import React, { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Popup, LayersControl, useMap } from "react-leaflet";
 import BalloonDataPopup from "./subcomponents/BalloonDataPopup";
 import LeafletVelocity from "./subcomponents/LeafletVelocity";
+import HeatmapLayer from "./subcomponents/HeatmapLayer";
 import { fetchWeatherForTrajectory, mapWeatherToTrajectory } from "../services/weatherService";
 import { calculateTrajectoryWindSpeedDirection, getCompassDirection, computeScatteredWindData, calculateBalloonMetrics } from "../utils/windUtils";
 import { generateWindGridData } from "../utils/windy";
 import Modal from './subcomponents/Modal';
 import BalloonChart from "./subcomponents/BalloonChart";
 import L from "leaflet";
+import { debounce } from "lodash";
+import 'leaflet.heat';
 import "./styles/BalloonDataPopup.css";
 import "leaflet/dist/leaflet.css";
 
@@ -28,16 +31,32 @@ const blueMarker = new L.Icon({
 });
 
 // Auto-Zoom Component for dynamic fitBounds
+
+// const AutoZoom = ({ trajectory }) => {
+//   const map = useMap();
+
+//   useEffect(() => {
+//     if (trajectory.length > 0) {
+//       const fitBoundsDebounced = debounce(() => {
+//         const bounds = L.latLngBounds(trajectory.map((p) => p.position));
+//         map.fitBounds(bounds, { padding: [50, 50], maxZoom: 5 });
+//       }, 200); // Delay execution by 300ms
+
+//       fitBoundsDebounced();
+//     }
+//   }, [trajectory, map]);
+
+//   return null;
+// };
+
 const AutoZoom = ({ trajectory }) => {
   const map = useMap();
-
   useEffect(() => {
     if (trajectory.length > 0) {
       const bounds = L.latLngBounds(trajectory.map((p) => p.position));
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 5 });
     }
   }, [trajectory, map]);
-
   return null;
 };
 
@@ -82,6 +101,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
   const [originalTrajectoryData, setOriginalTrajectoryData] = useState([]); // Stores unmodified original data
   const [missingHours, setMissingHours] = useState(new Set()); // Stores missing hour timestamps
   const [balloonDataLog, setBalloonDataLog] = useState([]);
+  const [heatmapData, setHeatmapData] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [windData, setWindData] = useState(null);
   const [showChart, setShowChart] = useState(false);
@@ -97,6 +117,20 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
         fetchAndAttachWeather();
     }
   }, [trajectory]);
+
+  useEffect(() => {
+    if (originalTrajectoryData.length > 0) {
+      const points = originalTrajectoryData
+        .filter(point => point.weather?.temperature)
+        .map(point => [
+          point.position[0],
+          point.position[1],
+          // Normalize temperature to intensity (0-1 range)
+          (point.weather.temperature + 20) / 60 // Adjust range based on data
+        ]);
+      setHeatmapData(points);
+    }
+  }, [originalTrajectoryData]);
 
 
   useEffect(() => {
@@ -403,9 +437,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
         )}
 
         {/* __________________________ PLOT Graph ________________________ */}
-        <button className="chart-button" onClick={() => setShowChart(true)} >
-          Show Flight Metrics
-        </button>
+        <button className="chart-button" onClick={() => setShowChart(true)}> Flight Analytics Chart 📈</button>
 
         {showChart && (
             <Modal onClose={() => setShowChart(false)}>
@@ -422,7 +454,14 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
       
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100vw", height: "85vh" }}>
 
-        <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={3}>
+        {/* <MapContainer style={{ width: "90%", height: "100%" }} center={[20, 0]} zoom={3}> */}
+        <MapContainer
+          preferCanvas={true}  // Forces Leaflet to use Canvas renderer
+          renderer={L.canvas({ willReadFrequently: true })} // Optimized for frequent reads
+          style={{ width: "90%", height: "100%" }}
+          center={[20, 0]}
+          zoom={3}
+        >
 
           {/* Standard Map (Default) */}
           <TileLayer
@@ -440,6 +479,19 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
                 />
               </LayersControl.Overlay>
 
+
+              <LayersControl.Overlay name="Temperature Heatmap">
+                <HeatmapLayer 
+                  points={originalTrajectoryData.map(point => [
+                    point.position[0],
+                    point.position[1],
+                    // Normalize temperature with higher intensity spread
+                    Math.min(1, Math.max(0, (point.weather?.temperature + 20) / 50))
+                  ])}
+                />
+              </LayersControl.Overlay>
+
+
           </LayersControl>
 
           <LeafletVelocity windData={windData} ref={layerControlRef} />
@@ -448,6 +500,8 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
 
           <AutoZoom trajectory={trajectory} /> {/* Auto-adjust zoom when trajectory updates */}
+
+          
           {/* <Polyline positions={trajectory.map((p) => p.position)} color="red" /> */}
           <AddArrowheads trajectory={trajectory} />
 
