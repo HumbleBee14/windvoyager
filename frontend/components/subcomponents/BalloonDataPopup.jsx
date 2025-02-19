@@ -4,76 +4,79 @@ import Draggable from "react-draggable";
 const BalloonDataPopup = ({ data, balloonId, onClose }) => {
   const nodeRef = useRef(null);
 
-  // Handle ESC Key to close the popup
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
         onClose();
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
-    
-    // Cleanup when unmounting
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
 
   return (
-    <Draggable nodeRef={nodeRef}>
+    <Draggable nodeRef={nodeRef} handle=".popup-header">
       <div ref={nodeRef} className="popup-container">
-        <button className="close-btn" onClick={onClose}>✖</button>
-        
-        <h3 className="popup-title">Balloon #{balloonId} Data Log</h3>
+        <div className="popup-header">
+          <h3 className="popup-title">Balloon #{balloonId} Data Log</h3>
+          <button className="close-btn" onClick={onClose}>✖</button>
+        </div>
 
-        {/* Table for Debug Data */}
-        <table className="popup-table">
-          <thead>
-            <tr>
-            <th>Hour</th>
-            <th>Latitude</th>
-            <th>Longitude</th>
-            <th>Alt (km)</th>
-            <th>Ascent Rate (ft/min)</th>
-            <th>Ground Temp</th>
-            <th style={{ width: '90px' }}>Wind Speed</th>
-            <th>Wind Direction (°)</th>
-            </tr>
+        <div className="popup-table-container">
+          <table className="popup-table">
+            <thead>
+              <tr>
+                <th>Hour</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Altitude</th>
+                <th>Ascent Rate (ft/min)</th>
+                <th style={{ width: '90px' }}>Wind Speed</th>
+                <th>Wind Direction (°)</th>
+                <th>Ground Temp</th>
+              </tr>
             </thead>
 
-                  <tbody>
-                  {data.map((entry, index) => (
-                    <tr key={index} className={entry.type.includes("Missing") ? "missing-row" : "recorded-row"}>
-                    <td>{entry.hour}H</td>
-                    <td>{entry.lat !== "-" ? entry.lat.toFixed(5) : "-"}</td>
-                    <td>{entry.lon !== "-" ? entry.lon.toFixed(5) : "-"}</td>
-                    <td>{entry.alt !== "-" ? entry.alt.toFixed(2) : "-"}</td>
-                    
-                    <td>
-                      {entry.ascentRate !== "-" ? (
+            <tbody>
+              {data.map((entry, index) => (
+                <tr key={index} className={entry.type.includes("Missing") ? "missing-row" : "recorded-row"}>
+                  <td>{entry.hour}H</td>
+                  <td>{entry.lat !== "-" ? entry.lat.toFixed(5) : "-"}</td>
+                  <td>{entry.lon !== "-" ? entry.lon.toFixed(5) : "-"}</td>
+                  <td>{entry.alt !== "-" ? entry.alt.toFixed(2) : "-"}</td>
+                  <td>
+                    {entry.ascentRate !== "-" ? (
                       <>
                         {entry.ascentRate.toFixed(2)}
                         {entry.ascentRate > 0 ? " ↑" : entry.ascentRate < 0 ? " ↓" : ""}
                       </>
-                      ) : "-"}
-                    </td>
-
-                    <td>{entry.weather?.temperature ? `${entry.weather.temperature}${entry.hourly_units?.temperature_2m || '°C'}` : "-"}</td>
-
-                    <td style={{ width: '90px' }}>{entry.windSpeed !== "-" ? `${(entry.windSpeed * 3.6).toFixed(1)}`+ " km/hr" : "-"}</td>
-
-                    <td>{entry.windDirection !== "-" ? `${entry.windDirection}°${entry.windCompass !== "-" ? '(' + entry.windCompass + ')': ""}` : "-"}</td>
-
-              </tr>
-            ))}
-          </tbody>
-
-        </table>
+                    ) : "-"}
+                  </td>
+                  <td style={{ width: '90px' }}>
+                    {entry.windSpeed !== "-" ? `${(entry.windSpeed * 3.6).toFixed(1)} km/hr` : "-"}
+                  </td>
+                  <td>
+                    {entry.windDirection !== "-" ? 
+                      `${entry.windDirection}°${entry.windCompass !== "-" ? '(' + entry.windCompass + ')': ""}` 
+                      : "-"}
+                  </td>
+                  <td>
+                    {entry.weather?.temperature ? 
+                      `${entry.weather.temperature}${entry.hourly_units?.temperature_2m || '°C'}` 
+                      : "-"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </Draggable>
   );
 };
+
 
 export default BalloonDataPopup;
 
