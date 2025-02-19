@@ -107,8 +107,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
   useEffect(() => {
     processWindData();
-  }, [balloonId]);
-  // }, [balloonId, originalTrajectoryData]);
+  }, [balloonId, originalTrajectoryData]);
   
 
   // ------------------------------------------------------

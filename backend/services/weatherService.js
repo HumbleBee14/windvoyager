@@ -9,7 +9,7 @@ const fetchWeatherData = async (latitude, longitude) => {
     `timezone=UTC`;
     // `timezone=auto`;
 
-  console.log("API hit made at time: ", new Date().toISOString());
+  // console.log("API hit made at time: ", new Date().toISOString());
   
   const response = await fetch(url);
   
@@ -36,7 +36,7 @@ const fetchBulkWeatherData = async (locations) => {
   `current_weather=true&` +
   `timezone=UTC`;  // Force UTC timezone instead of auto
   
-  console.log("API hit made at time: ", new Date().toISOString());
+  console.log("Bulk API hit made at time: ", new Date().toISOString());
 
   const response = await fetch(url);
   
