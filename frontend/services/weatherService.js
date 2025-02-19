@@ -19,7 +19,7 @@ export const fetchWeatherForTrajectory = async (trajectoryData) => {
           }))
         };
 
-        console.log("Fetching weather for locations:", requestBody);
+        // console.log("Fetching weather for locations:", requestBody);
 
         const response = await fetch(`${API_BASE_URL}/weather/bulk`, {
             method: "POST",
@@ -33,7 +33,7 @@ export const fetchWeatherForTrajectory = async (trajectoryData) => {
 
         const weatherData = await response.json();
         
-        console.log("Weather API Response:", weatherData);
+        // console.log("Weather API Response:", weatherData);
         return weatherData;
     } catch (error) {
         console.error("Error fetching bulk weather data:", error);
@@ -77,13 +77,18 @@ export const mapWeatherToTrajectory = (trajectoryData, weatherData) => {
   if (!weatherData || weatherData.length === 0) return trajectoryData;
 
   return trajectoryData.map((point, index) => {
-      const locationWeather = weatherData[index];  // Direct mapping based on index
+      const locationWeather = weatherData[index];
+      // Direct mapping based on index because we receive API response in same order as trajectory positions provided
 
       if (!locationWeather) {
           console.warn(`No weather found for index ${index}, (${point.position[0]}, ${point.position[1]})`);
           return { ...point, weather: null };
       }
 
+      // Get current hour in UTC
+      const currentUTCHour = new Date().getUTCHours();
+      
+      // Calculate the target hour index
       // Convert OpenMeteo's time format to match our 0h, 1h ago system
       const matchedHourIndex = matchWeatherTime(locationWeather.hourly.time, point.hour);
 
@@ -111,16 +116,29 @@ export const mapWeatherToTrajectory = (trajectoryData, weatherData) => {
 // MATCH WEATHER TIMESTAMPS AUTOMATICALLY
 // --------------------------------------------------
 const matchWeatherTime = (weatherTimestamps, hourAgo) => {
-  const currentUTCTime = new Date();
-  currentUTCTime.setHours(currentUTCTime.getHours() - hourAgo);
-  const formattedTime = currentUTCTime.toISOString().slice(0, 13) + ":00";
+  // Get current time in UTC
+  const now = new Date();
+  const utcNow = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+    now.getUTCHours()
+  ));
 
-  console.log("Hours ago: " + hourAgo + " We found this time: " + formattedTime);
-
-  let timeStampIndex = weatherTimestamps.findIndex((t) => t.startsWith(formattedTime));
-  console.log(timeStampIndex);
+  // Calculate target time in UTC
+  const targetTime = new Date(utcNow);
+  targetTime.setUTCHours(targetTime.getUTCHours() - hourAgo);
+  
+  // Format for comparison
+  const formattedTarget = targetTime.toISOString().slice(0, 13) + ":00";
+  
+  // Find matching timestamp
+  const timeStampIndex = weatherTimestamps.findIndex(t => t.startsWith(formattedTarget));
+  
+  // console.log(`Hour ago: ${hourAgo}, Target time: ${formattedTarget}, Found index: ${timeStampIndex}`);
   return timeStampIndex;
 };
+
 
 // ------------------------------------------------------------------------------------
 
@@ -192,6 +210,18 @@ const findClosestLocation = (lat, lon, weatherData) => {
   return closestWeather;
 };
 
+// -----------------------------------------------------------------------
+const matchWeatherTime = (weatherTimestamps, hourAgo) => {
+  const currentUTCTime = new Date();
+  currentUTCTime.setHours(currentUTCTime.getHours() - hourAgo);
+  const formattedTime = currentUTCTime.toISOString().slice(0, 13) + ":00";
+
+  console.log("Hours ago: " + hourAgo + " We found this time: " + formattedTime);
+
+  let timeStampIndex = weatherTimestamps.findIndex((t) => t.startsWith(formattedTime));
+  console.log(timeStampIndex);
+  return timeStampIndex;
+};
 // -----------------------------------------------------------------------
 const getDistance = (lat1, lon1, lat2, lon2) => {
   const toRadians = (degree) => (degree * Math.PI) / 180;
