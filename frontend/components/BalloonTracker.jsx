@@ -480,14 +480,14 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
                     <strong>Balloon #{balloonId}</strong> ({balloon.hour}H ago)<br />
                     <hr style={{ margin: "5px 0" }} />
                     <strong>Position:</strong><br />
-                    Lat: {originalBalloon?.position[0].toFixed(5)}°<br />
-                    Lon: {originalBalloon?.position[1].toFixed(5)}°<br />
-                    Alt: {originalBalloon?.altitude.toFixed(2)} km<br />
+                    <strong>Lat:</strong> {originalBalloon?.position[0].toFixed(5)}°<br />
+                    <strong>Lon:</strong> {originalBalloon?.position[1].toFixed(5)}°<br />
+                    <strong>Alt:</strong> {originalBalloon?.altitude.toFixed(2)} km<br />
                     <hr style={{ margin: "5px 0" }} />
                     <strong>Ground-Level Weather:</strong><br />
                     🌡️ {originalBalloon?.weather?.temperature} {originalBalloon?.hourly_units?.temperature_2m}<br />
                     💨 {originalBalloon?.weather?.windspeed} {originalBalloon?.hourly_units?.windspeed_10m}<br />
-                    🧭 {originalBalloon?.weather?.winddirection}°
+                    {/* 🧭 {originalBalloon?.weather?.winddirection}° */}
                   </Popup>
 
                 </Marker>

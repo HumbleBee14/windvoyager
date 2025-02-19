@@ -29,7 +29,8 @@ const BalloonChart = ({ trajectoryData, onClose }) => {
         altitude: true,
         windSpeed: true,
         ascentRate: true,
-        acceleration: true
+        acceleration: true,
+        temperature: true
     });
 
     // Toggle visibility of a line when its legend is clicked
@@ -42,6 +43,7 @@ const BalloonChart = ({ trajectoryData, onClose }) => {
             windSpeed: "windSpeed",
             ascentRateNormalized: "ascentRate",
             accelerationNormalized: "acceleration",
+            temperature: "temperature"
         };
     
         const targetKey = keyMap[dataKey];
@@ -92,7 +94,8 @@ const BalloonChart = ({ trajectoryData, onClose }) => {
         ascentRate: null,
         ascentRateNormalized: null,
         acceleration: null,
-        accelerationNormalized: null
+        accelerationNormalized: null,
+        temperature: null
     }];
 
     // Then add the filtered trajectory data
@@ -109,6 +112,7 @@ const BalloonChart = ({ trajectoryData, onClose }) => {
             windSpeed: point.windSpeed === "-" ? null : point.windSpeed,
             acceleration: point.acceleration === "-" ? null : point.acceleration,
             accelerationNormalized: null,
+            temperature: point.weather?.temperature || null,
         }))
     );
 
@@ -203,7 +207,9 @@ const BalloonChart = ({ trajectoryData, onClose }) => {
 
                     <YAxis yAxisId="left" label={{ value: 'Altitude (km)', angle: -90, position: 'insideLeft' }} />
 
-                    <YAxis yAxisId="right" orientation="right" label={{ value: 'Wind Speed (m/s)', angle: 90, position: 'insideRight' }} />
+                    <YAxis yAxisId="right" orientation="right" label={{ value: 'Wind Speed (m/s)', angle: 90, position: 'insideRight',  offset: 80, style: { textAnchor: 'middle'} }} />
+
+                    <YAxis yAxisId="temp" orientation="right" label={{ value: 'Temperature (°C)', angle: 90, position: 'insideRight', offset: 10, style: { textAnchor: 'middle'} }} />
 
                     <YAxis yAxisId="hiddenAscent" hide={true} />
                     <YAxis yAxisId="hiddenAccel" hide={true} />
@@ -246,7 +252,7 @@ const BalloonChart = ({ trajectoryData, onClose }) => {
                         name="Altitude (km)"
                         connectNulls={true}
                         strokeWidth={2}
-                        markerStart="url(#arrow)"
+                        markerStart={visibleLines.altitude ? "url(#arrow)" : ""}
                     />
                     <Line 
                         yAxisId="right"
@@ -257,7 +263,7 @@ const BalloonChart = ({ trajectoryData, onClose }) => {
                         name="Wind Speed (m/s)"
                         connectNulls={true}
                         strokeWidth={2}
-                        markerStart="url(#arrow)"
+                        markerStart={visibleLines.windSpeed ? "url(#arrow)" : ""}
                     />
 
                     {/* Dotted Line for Ascent rate & Acceleration (NO Y-AXIS, JUST FOR PATTERN) */}
@@ -285,6 +291,19 @@ const BalloonChart = ({ trajectoryData, onClose }) => {
                         strokeWidth={1}
                     />
                     
+                    <Line 
+                        yAxisId="temp"
+                        type="monotone" 
+                        dataKey="temperature" 
+                        stroke="#FF6B6B"  // Warm reddish color for temperature
+                        strokeOpacity={visibleLines.temperature ? 1 : 0}  
+                        name="Ground Temp (°C)"
+                        connectNulls={true}
+                        strokeWidth={1.5}
+                        markerStart={visibleLines.temperature ? "url(#arrow)" : ""}
+                    />
+
+
                 </LineChart>
             </ResponsiveContainer>
 
