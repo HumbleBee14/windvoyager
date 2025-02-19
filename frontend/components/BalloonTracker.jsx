@@ -185,9 +185,38 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
           return;
         }
         const updatedTrajectory = mapWeatherToTrajectory(originalTrajectoryData, weatherData);
-        // console.log("Updated Trajectory with Weather:", updatedTrajectory);
+        console.log("Updated Trajectory for Ballon ID:", balloonId);
+        console.log("Updated Trajectory with Weather:", updatedTrajectory);
         
         setOriginalTrajectoryData(updatedTrajectory);  // Update state with weather data
+
+        
+        // Update balloon log with weather data
+        const updatedBalloonLog = balloonDataLog.map(logEntry => {
+          if (logEntry.type === "Missing") {
+            return {
+              ...logEntry,
+              weather: null,
+              hourly_units: null
+            };
+          }
+
+          // Find matching trajectory point
+          const matchingPoint = updatedTrajectory.find(point => point.hour === logEntry.hour);
+          
+          if (matchingPoint && matchingPoint.weather) {
+              return {
+                  ...logEntry,
+                  weather: matchingPoint.weather,
+                  hourly_units: matchingPoint.hourly_units
+              };
+          }
+          return logEntry;
+        });
+
+        setBalloonDataLog(updatedBalloonLog);
+      
+        console.log("Updated Balloon Log with Weather:", updatedBalloonLog);
 
     } catch (error) {
         console.error("Error fetching weather data:", error);
@@ -429,13 +458,39 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
               return (
                 <Marker key={index} position={balloon.position} icon={blueMarker}>
+                  {/* 
                   <Popup>
                     <strong>Balloon #:</strong> {balloonId} <br />
                     <strong>Hour:</strong> {balloon.hour}H ago <br />
                     <strong>Latitude:</strong> {originalBalloon ? originalBalloon.position[0].toFixed(5) : balloon.position[0].toFixed(5)}° <br />
                     <strong>Longitude:</strong> {originalBalloon ? originalBalloon.position[1].toFixed(5) : balloon.position[1].toFixed(5)}° <br />
                     <strong>Altitude:</strong> {originalBalloon ? originalBalloon.altitude.toFixed(2) : balloon.altitude.toFixed(2)} km
+
+                    {originalBalloon?.weather && (
+                      <>
+                        <hr style={{ margin: "5px 0" }} />
+                        <strong>Temperature:</strong> {originalBalloon.weather.temperature} {originalBalloon.hourly_units.temperature_2m} <br />
+                        <strong>Wind Speed (Ground):</strong> {originalBalloon.weather.windspeed} {originalBalloon.hourly_units.windspeed_10m} <br />
+                        <strong>Wind Direction(Ground):</strong> {originalBalloon.weather.winddirection} {originalBalloon.hourly_units.winddirection_10m}
+                      </>
+                    )}
+                  </Popup> 
+                  */}
+
+                  <Popup>
+                    <strong>Balloon #{balloonId}</strong> ({balloon.hour}H ago)<br />
+                    <hr style={{ margin: "5px 0" }} />
+                    <strong>Position:</strong><br />
+                    Lat: {originalBalloon?.position[0].toFixed(5)}°<br />
+                    Lon: {originalBalloon?.position[1].toFixed(5)}°<br />
+                    Alt: {originalBalloon?.altitude.toFixed(2)} km<br />
+                    <hr style={{ margin: "5px 0" }} />
+                    <strong>Ground-Level Weather:</strong><br />
+                    🌡️ {originalBalloon?.weather?.temperature} {originalBalloon?.hourly_units?.temperature_2m}<br />
+                    💨 {originalBalloon?.weather?.windspeed} {originalBalloon?.hourly_units?.windspeed_10m}<br />
+                    🧭 {originalBalloon?.weather?.winddirection}°
                   </Popup>
+
                 </Marker>
               );
             })}

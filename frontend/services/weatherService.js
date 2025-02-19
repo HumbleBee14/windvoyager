@@ -103,7 +103,8 @@ export const mapWeatherToTrajectory = (trajectoryData, weatherData) => {
               temperature: locationWeather.hourly.temperature_2m[matchedHourIndex],
               windspeed: locationWeather.hourly.windspeed_10m[matchedHourIndex],
               winddirection: locationWeather.hourly.winddirection_10m[matchedHourIndex]
-          }
+          },
+          hourly_units: locationWeather.hourly_units
       };
   });
 };
