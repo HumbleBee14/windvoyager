@@ -185,13 +185,13 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
           return;
         }
         const updatedTrajectory = mapWeatherToTrajectory(originalTrajectoryData, weatherData);
-        console.log("Updated Trajectory for Ballon ID:", balloonId);
-        console.log("Updated Trajectory with Weather:", updatedTrajectory);
+        // console.log("Updated Trajectory for Ballon ID:", balloonId);
+        // console.log("Updated Trajectory with Weather:", updatedTrajectory);
         
         setOriginalTrajectoryData(updatedTrajectory);  // Update state with weather data
 
-        
-        // Update balloon log with weather data
+        // -----------------------------------------------------------
+        // Update balloon log with weather data (for records)
         const updatedBalloonLog = balloonDataLog.map(logEntry => {
           if (logEntry.type === "Missing") {
             return {
@@ -216,7 +216,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
         setBalloonDataLog(updatedBalloonLog);
       
-        console.log("Updated Balloon Log with Weather:", updatedBalloonLog);
+        // console.log("Updated Balloon Log with Weather:", updatedBalloonLog);
 
     } catch (error) {
         console.error("Error fetching weather data:", error);

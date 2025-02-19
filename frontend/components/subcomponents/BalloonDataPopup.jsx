@@ -34,8 +34,9 @@ const BalloonDataPopup = ({ data, balloonId, onClose }) => {
             <th>Hour</th>
             <th>Latitude</th>
             <th>Longitude</th>
-            <th>Altitude</th>
+            <th>Alt (km)</th>
             <th>Ascent Rate (ft/min)</th>
+            <th>Ground Temp</th>
             <th style={{ width: '90px' }}>Wind Speed</th>
             <th>Wind Direction (°)</th>
             </tr>
@@ -58,9 +59,12 @@ const BalloonDataPopup = ({ data, balloonId, onClose }) => {
                       ) : "-"}
                     </td>
 
-                    <td style={{ width: '90px' }}>{entry.windSpeed !== "-" ? `${(entry.windSpeed * 3.6).toFixed(1)}`+
-                    " km/hr" : "-"}</td>
+                    <td>{entry.weather?.temperature ? `${entry.weather.temperature}${entry.hourly_units?.temperature_2m || '°C'}` : "-"}</td>
+
+                    <td style={{ width: '90px' }}>{entry.windSpeed !== "-" ? `${(entry.windSpeed * 3.6).toFixed(1)}`+ " km/hr" : "-"}</td>
+
                     <td>{entry.windDirection !== "-" ? `${entry.windDirection}°${entry.windCompass !== "-" ? '(' + entry.windCompass + ')': ""}` : "-"}</td>
+
               </tr>
             ))}
           </tbody>
