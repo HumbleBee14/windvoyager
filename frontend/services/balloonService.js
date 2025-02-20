@@ -26,7 +26,6 @@ export const requestWindData = async (balloonId) => {
 
   try {
     const response = await axios.post(`${API_BASE_URL}/balloons/generate-wind`, { balloonId });
-    console.log("Hogya download bro windata");
     return response.data;
   } catch (error) {
     console.error("Error fetching wind data:", error);

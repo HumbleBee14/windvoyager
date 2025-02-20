@@ -112,10 +112,10 @@ export const AboutMe = () => {
             </p>
 
             <p>
-                Passionate about <b>software development</b>, system design, and <b>problem-solving</b>.  
+                Passionate about <b>software development</b>, system design, and problem-solving.  
                 What excites me the most is the process of <b>building things</b> - transforming ideas into real-world solutions using technology.  
                 I enjoy learning about new <b>technologies</b>, <b>software development trends</b>, and <b>emerging innovations</b>,  
-                constantly exploring what’s possible and how technology can push boundaries.  
+                constantly exploring what's possible and how technology can push boundaries.  
             </p>
 
             <p>
@@ -172,6 +172,8 @@ export const AboutMe = () => {
                 <li>🌎 <b>Portfolio:</b> <a href="https://dineshyd.vercel.app" target="_blank">https://dineshyd.vercel.app</a></li>
                 <li>📝 <b>Blogging Platform (Project):</b> <a href="https://grepguru.com" target="_blank">https://grepguru.com</a></li>
                 <li>🎈⚡ <b>Windvoyager:</b> <a href="https://windvoyager.grepguru.com" target="_blank">https://windvoyager.grepguru.com</a></li>
+                <li> <b> - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  </b> </li>
+                <li> <b>Email: </b> <a href="mailto:contactdy14@gmail.com">contactdy14@gmail.com</a></li>
             </ul>
         </div>
     );
@@ -339,14 +341,13 @@ export const ChallengesFaced = () => {
                 color: '#ddd'
             }}>
                 <li><b>Choosing the right tech stack</b> between Python vs JavaScript for backend/frontend, balancing ML potential with fast development.</li>
+                <li><b>Understanding the dataset</b>: Realizing it's not a sequential time-series problem but a constellation-based hourly dataset with missing gaps.</li>
                 <li><b>Handling corrupted JSON & malformed API responses</b> from WindBorne API, requiring custom sanitization & logging.</li>
-                <li><b>Understanding the dataset</b>: Realizing it’s not a sequential time-series problem but a constellation-based hourly dataset with missing gaps.</li>
                 <li><b>Handling missing/skipped timestamps</b> across backend data, visualization, and analytics to maintain accurate trajectory insights.</li>
                 <li><b>Optimizing frontend performance</b>: Keeping components lightweight, minimizing API calls, and reducing unnecessary data processing.</li>
                 <li><b>Computing wind vectors & grid interpolation</b> with limited dataset & documentation - took extensive trial and error to get wind layer working.</li>
                 <li><b>Mapping OpenMeteo timestamps</b> correctly to align with our system's 0H-based structure for accurate balloon movement tracking.</li>
                 <li><b>Handling imprecise latitude/longitude mappings</b> from OpenMeteo API, which returned approximate points, causing mismatches in temperature data.</li>
-                <li><b>Realistic heatmap visualization</b> despite sparse and scattered temperature data-ensuring meaningful spatial representation.</li>
                 <li><b>Extracting insights from minimal dataset</b>, requiring thoughtful estimation, interpolation, and predictive modeling strategies.</li>
             </ul>
         </div>
@@ -366,7 +367,7 @@ export const TechnologiesUsed = () => {
 
             <li><b>Frontend:</b> React, Leaflet.js (Map), Recharts (Plots), Turf.js (Spatial analysis)</li>
             <li><b>Backend:</b> Node.js (Express), OpenMeteo (Weather API)</li>
-            <li><b>Platform:</b> Backend Hosted on AWS EC2 instance, Frontend application hosted on Cloudflare.</li>
+            <li><b>Platform:</b> Backend Hosted on <b>AWS EC2 Linux instance</b>, Frontend application hosted on Cloudflare.</li>
 
             <div style={{ 
                 width: '80%', 
@@ -382,6 +383,7 @@ export const TechnologiesUsed = () => {
                 <li><a href="https://recharts.org/en-US" target="_blank" rel="noopener noreferrer">Recharts Library</a> - For creating flight analytics charts.</li>
                 <li><a href="https://turfjs.org/" target="_blank" rel="noopener noreferrer">Turf.js</a> - Used for geospatial calculations (distance, trajectory smoothing).</li>
                 <li><a href="https://www.climate.gov/maps-data/datasets" target="_blank" rel="noopener noreferrer">Climate Data Sources</a> - Used as a reference for future ML-based predictions.</li>
+                <li><a href="https://openai.com/" target="_blank" rel="noopener noreferrer">GPT & other LLM resources</a> - For both learning and development purposes.</li>
                 <li><a href="https://www.geographyrealm.com/latitude-longitude/" target="_blank" rel="noopener noreferrer">Understanding Latitude & Longitude</a> - Detailed explanation of geographic coordinates.</li>
                 <li><a href="https://www.spatialanalysisonline.com/HTML/radial_basis_and_spline_functi.htm" target="_blank" rel="noopener noreferrer">Radial Basis Function Interpolation</a> - Understanding RBF interpolation for generating structured wind grid data.</li>
                 <li><a href="https://wlog.viltstigen.se/articles/2021/11/08/visualizing-wind-using-leaflet/" target="_blank" rel="noopener noreferrer">Visualizing Wind with Leaflet</a> - Guide on implementing wind visualization using Leaflet and velocity layers.</li>

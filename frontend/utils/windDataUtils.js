@@ -31,8 +31,8 @@ export const generateWindGrid = (data) => {
     // const scatteredData = [...data].reverse();
     const scatteredData = data;
    
-    console.log("Length of Scattered Data: " + scatteredData.length);
-    console.log("Scattered Data: " + JSON.stringify(scatteredData, null, 2));
+    // console.log("Length of Scattered Data: " + scatteredData.length);
+    // console.log("Scattered Data: " + JSON.stringify(scatteredData, null, 2));
 
     // Define grid resolution
     const nx = 15;

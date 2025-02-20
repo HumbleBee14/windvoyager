@@ -13,7 +13,6 @@
     "@turf/turf": "^7.2.0",
     "axios": "^1.7.9",
     "chart.js": "^4.4.7",
-    "d3": "^7.9.0",
     "delaunator": "^5.0.1",
     "geolib": "^3.3.4",
     "leaflet": "^1.9.4",
@@ -27,7 +26,6 @@
     "react-leaflet": "^4.2.1",
     "react-leaflet-drift-marker": "^4.0.0",
     "recharts": "^2.15.1",
-    "three": "^0.173.0",
     "tz-lookup": "^6.1.25"
   },
   "devDependencies": {

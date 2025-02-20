@@ -31,7 +31,6 @@ export function calculateTrajectoryWindSpeedDirection(lat1, lon1, lat2, lon2, pr
 
 export function calculateScatteredWindSpeedDirection(lat1, lon1, lat2, lon2, prevHour, currHour, alt1 = 0, alt2 = 0) {
     if (!lat1 || !lon1 || !lat2 || !lon2 || currHour === null || prevHour === null || prevHour <= currHour) {
-        console.log("Nahi aya yaha");
         return { speed: "-", direction: "-" };
     }
 
@@ -91,7 +90,6 @@ export const calculateBalloonMetrics = (currentData, lastValidData) => {
     const acceleration = lastSpeed !== "-" ? 
         (currentData.windSpeed - lastSpeed) / secondsElapsed : 
         "-";
-    // console.log('calculated acceleration:', acceleration);
 
     // return {
     //     ascentRate: parseFloat(ascentRate.toFixed(2)),
@@ -156,7 +154,6 @@ export const computeScatteredWindData = (originalTrajectoryData) => {
 
         // Compute wind speed and direction
         if (speed === "-" || direction === "-") {
-            console.log("holalalala - " + i);
             continue;
         }
 

@@ -53,7 +53,7 @@ router.get("/insights/:id", async (req, res) => {
 // @Deprecated: Moved to frontned
 // API to generate GRIB (json) file for wind
 router.post("/generate-wind", async (req, res) => {
-  console.log("Executing Python script to generate wind data...");
+  // console.log("Executing Python script to generate wind data...");
   const cmd = (`python ${PYTHON_SCRIPT}`)
 
   exec(cmd, {cwd: OUTPUT_FILE},  (error, stdout, stderr) => {

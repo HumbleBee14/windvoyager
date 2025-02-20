@@ -58,7 +58,7 @@ export const fetchWeatherForSingleLocation = async (latitude, longitude) => {
 
         const weatherData = await response.json();
         
-        console.log("Single location weather data:", JSON.stringify(weatherData));
+        // console.log("Single location weather data:", JSON.stringify(weatherData));
         
         return {
             temperature: weatherData.current_weather.temperature,
@@ -162,7 +162,7 @@ export const mapWeatherToTrajectory = (trajectoryData, weatherData) => {
       const point = trajectoryData[i];
       const closestWeather = findClosestLocation(point.position[0], point.position[1], weatherData);
 
-      console.log("For point: " + point.position[0] + ", " + point.position[1], " Closest Weather Data: " + JSON.stringify(closestWeather));
+      // console.log("For point: " + point.position[0] + ", " + point.position[1], " Closest Weather Data: " + JSON.stringify(closestWeather));
 
       if (!closestWeather) {
           console.warn(`No nearby weather data found for (${point.position[0]}, ${point.position[1]})`);
@@ -172,7 +172,7 @@ export const mapWeatherToTrajectory = (trajectoryData, weatherData) => {
 
       const matchedHourIndex = matchWeatherTime(closestWeather.hourly.time, point.hour);
 
-      console.log("Matched Index for point HOUR: " + point.hour + " Index: " + matchedHourIndex);
+      // console.log("Matched Index for point HOUR: " + point.hour + " Index: " + matchedHourIndex);
 
       if (matchedHourIndex === -1) {
           console.warn(`No matching hour found for point ${point.hour}H ago`);
@@ -217,10 +217,10 @@ const matchWeatherTime = (weatherTimestamps, hourAgo) => {
   currentUTCTime.setHours(currentUTCTime.getHours() - hourAgo);
   const formattedTime = currentUTCTime.toISOString().slice(0, 13) + ":00";
 
-  console.log("Hours ago: " + hourAgo + " We found this time: " + formattedTime);
+  // console.log("Hours ago: " + hourAgo + " We found this time: " + formattedTime);
 
   let timeStampIndex = weatherTimestamps.findIndex((t) => t.startsWith(formattedTime));
-  console.log(timeStampIndex);
+  // console.log(timeStampIndex);
   return timeStampIndex;
 };
 // -----------------------------------------------------------------------
