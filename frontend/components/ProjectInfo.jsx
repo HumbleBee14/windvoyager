@@ -7,7 +7,7 @@ import {
     FuturePlans,
     ChallengesFaced,
     TechnologiesUsed,
-    LessonsLearned
+    // LessonsLearned
 } from "./subcomponents/ProjectSections"; // Import sections
 
 import "./styles/ProjectInfo.css";
@@ -46,7 +46,7 @@ const ProjectInfo = ({ onClose }) => {
         future: { title: "Future Plans", content: <FuturePlans /> },
         challenges: { title: "Challenges Faced", content: <ChallengesFaced /> },
         tech: { title: "Technologies Used", content: <TechnologiesUsed /> },
-        lessons: { title: "Lessons Learned", content: <LessonsLearned /> },
+        // lessons: { title: "Lessons Learned", content: <LessonsLearned /> },
     };
 
     // -------------------------------------------------------------------
