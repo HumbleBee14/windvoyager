@@ -6,11 +6,16 @@ export const AboutProject = () => {
     return (
         <div>
             <p>
-                <b>WindVoyager</b> is a real-time <b>weather balloon tracking system</b> that visualizes 
-                <b> balloon trajectories, wind patterns, and atmospheric conditions</b>. 
-                It integrates real-time <b>weather APIs</b>, historical flight data, and <b> machine learning </b> 
-                for <b>trajectory predictions</b> and deeper analysis of atmospheric patterns.
+                <span style={{ color: "#FFA500", fontWeight: "bold" }}>WindVoyager</span> is a real-time <b>weather balloon tracking system</b> that visualizes  
+                <b>balloon trajectories, wind patterns, and atmospheric conditions</b>.  
+                It integrates telemetry data from <a href="https://windbornesystems.com/" target="_blank" rel="noopener noreferrer"><b>WindBorne Systems</b></a> and real-time weather insights from <b>OpenMeteo API </b>  
+                to analyze <b>balloon movement, altitude changes, wind velocities, and temperature variations</b>.  
+                The project also enables <b>historical trajectory analysis</b> and visualization of missing data points  
+                to understand atmospheric trends. While future plans involve <b>predictive modeling</b>,  
+                the current focus is on extracting meaningful insights from real-time and past balloon data.  
             </p>
+
+
 
             <div style={{ 
                 width: '80%', 
@@ -36,7 +41,7 @@ export const AboutProject = () => {
 
             <h3>How It Works?</h3>
             <ul>
-                <li> Fetches <b>real-time balloon positions</b> from WindBorne Systems.</li>
+                <li> Fetches <b>real-time balloon positions</b> from <a href="https://windbornesystems.com/" target="_blank" rel="noopener noreferrer">WindBorne Systems</a>.</li>
                 <li> Calculates <b>derived metrics</b> including wind vectors, balloon velocity, acceleration, and vertical rates (ascent-descent) using existing telemetry data.</li>
                 <li> Retrieves <b>weather data</b> (temperature, pressure and other weather-related data) via <b>OpenMeteo API</b> (Under Development).</li>
                 <li> Interpolates <b>missing data points</b> using statistical methods and machine learning algorithms (Future).</li>
@@ -56,6 +61,42 @@ export const AboutProject = () => {
                 <li>📡 <b>Aerospace & Aviation</b> – Tracking near-space objects.</li>
                 <li>📊 <b>Meteorology</b> – Improving weather forecasting models.</li>
             </ul>
+
+            <div style={{ 
+                width: '80%', 
+                margin: '2rem auto', 
+                borderBottom: '1px solid rgba(205, 85, 15, 0.91)' 
+            }} />
+
+            <div>
+                <p>
+                    🔗 <b>GitHub Repository:</b> <a href="https://github.com/HumbleBee14/windvoyager" target="_blank">Github Repository</a>
+                    <br />
+                    <small style={{color: '#FFA07A'}}>Note: Repository is currently private due to active application period for project submission. Will be made public once completed.</small>
+                </p>
+                
+                <img 
+                    src="https://res.cloudinary.com/dqrndttrt/image/upload/v1740028940/Windvoyager_Repo_qxjo7u.png" 
+                    alt="WindVoyager GitHub Repository"
+                    style={{
+                        width: '100%',
+                        maxWidth: '800px',
+                        height: 'auto',
+                        margin: '1rem auto',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.2), 0 0 15px rgba(255, 217, 0, 0.94)'
+                    }}
+                />
+
+            </div>
+
+            <div style={{ 
+                width: '80%', 
+                margin: '2rem auto', 
+                borderBottom: '1px solid rgba(205, 85, 15, 0.91)' 
+            }} />
+
+
         </div>
     );
 };
@@ -65,10 +106,26 @@ export const AboutMe = () => {
     return (
         <div>
             <p>
-                Passionate about <b>software development</b>, <b>system design</b>, and <b>problem-solving</b>.  
-                I love building systems that solve real-world challenges efficiently.  
-                Currently, here I am working on building <b>WindVoyager</b>, a real-time <b>weather balloon tracking system </b>  
-                that integrates primarily the weather balloon's telemetry data from <b>WindBorne Systems</b> and <b>OpenMeteo API</b> for weather analytics, and I plan to integrate ML-based trajectory predictions.
+                <span style={{ fontSize: "18px", fontWeight: "bold", color: "#FFA500" }}>
+                    Hey there! I'm Dinesh 👋, MSCS student @ Georgia Tech.
+                </span>
+            </p>
+
+            <p>
+                Passionate about <b>software development</b>, system design, and <b>problem-solving</b>.  
+                What excites me the most is the process of <b>building things</b> - transforming ideas into real-world solutions using technology.  
+                I enjoy learning about new <b>technologies</b>, <b>software development trends</b>, and <b>emerging innovations</b>,  
+                constantly exploring what’s possible and how technology can push boundaries.  
+            </p>
+
+            <p>
+                Currently, here I am working on this project - <b>WindVoyager</b>, a real-time <b>weather balloon tracking system</b>  
+                that integrates telemetry data from <b>WindBorne Systems</b> and <b>OpenMeteo API</b> for weather analytics.  
+                Through this project, I am exploring <b>how atmospheric sensor data</b> collected over time by weather balloons  
+                can be analyzed to extract meaningful insights - whether for <b>weather forecasting</b>,  
+                understanding <b>wind patterns</b>, or identifying potential trends in atmospheric conditions.  
+                I am continuously experimenting with different approaches to see what valuable information  
+                can be derived from this dataset, along with integrating additional data from external APIs.
             </p>
 
             <div style={{ 
@@ -79,8 +136,8 @@ export const AboutMe = () => {
 
             <h3>Education</h3>
             <ul>
-                <li><b>Undergraduate:</b> Bachelor's in Electronics and Communication Engineering.</li>
-                <li><b>Graduate (Current):</b> MSCS @ Georgia Tech [Dual specialization in Computing Systems and Machine Learning]</li>
+                <li><span style={{ display: 'inline-block', width: '120px' }}><b>Undergraduate:</b></span> Bachelor's in Electronics and Communication Engineering (ECE).</li>
+                <li><span style={{ display: 'inline-block', width: '90px' }}><b>Graduate:</b></span> MSCS @ Georgia Tech [Dual specialization in Computing Systems and Machine Learning] (In-Progress)</li>
             </ul>
 
             <div style={{ 
@@ -91,8 +148,8 @@ export const AboutMe = () => {
 
             <h3>Work Experience</h3>
             <ul>
-                <li><b>Prior Work:</b> Experience in <b>backend development</b>, using <b>Java (Spring Boot)</b>, <b>Node.js (Express.js), Python</b>.</li>
-                {/* <li><b>Key Contributions:</b> Built <b>scalable APIs</b>, microservices.</li> */}
+                <li><b>Prior Work:</b> Experience in backend software development, using <b>Java (Spring Boot)</b>, <b>Node.js (Express.js), Python</b>.</li>
+                <li><b>More details on <a href="https://www.linkedin.com/in/dineshyd/" target="_blank">Linkedin</a></b></li>
             </ul>
 
             <div style={{ 
@@ -114,6 +171,7 @@ export const AboutMe = () => {
                 <li>✍ <b>Medium:</b> <a href="https://medium.com/@humble_bee" target="_blank">https://medium.com/@humble_bee</a></li>
                 <li>🌎 <b>Portfolio:</b> <a href="https://dineshyd.vercel.app" target="_blank">https://dineshyd.vercel.app</a></li>
                 <li>📝 <b>Blogging Platform (Project):</b> <a href="https://grepguru.com" target="_blank">https://grepguru.com</a></li>
+                <li>🎈⚡ <b>Windvoyager:</b> <a href="https://windvoyager.grepguru.com" target="_blank">https://windvoyager.grepguru.com</a></li>
             </ul>
         </div>
     );
@@ -141,7 +199,7 @@ export const CurrentWork = ({ milestones }) => {
                 <li><span style={{color: '#2196F3'}}><b>Phase 2</b></span> - Derived Insights: Compute wind vectors, velocity, ascent/descent rates.✅</li>
                 <li><span style={{color: '#00BCD4'}}><b>Phase 2.25</b></span> - Time-Zone Analysis & Animation: Filter and animate balloon movements based on time zones.✅</li>
                 <li><span style={{color: '#03A9F4'}}><b>Phase 2.5</b></span> - Weather Integration: Fetch weather data (temperature, wind speed, direction) via OpenMeteo API. Added Heatmap visualization for temperature variations.✅</li>
-                <li><span style={{color: '#FF1493'}}><b>Phase 3</b></span> - ML & Predictions [Upcoming Plans]: 
+                <li><span style={{color: '#FF1493'}}><b>Phase 3</b></span> - ML & Predictions <b>[Upcoming Plans]</b>: 
                     <ul>
                         <li>Use <b>Machine Learning (LSTM, Kalman Filters)</b> to predict future balloon positions.</li>
                         <li>Interpolate <b>missing trajectory points</b> based on historical movement data.</li>
@@ -157,7 +215,7 @@ export const CurrentWork = ({ milestones }) => {
             }} />
 
 
-            <h3>Development Milestones</h3>
+            <h3>Development Milestones (Git Commits)</h3>
             <div className="milestone-list">
                 {milestones.map((milestone, index) => (
                     <div key={index} className="milestone-item">
@@ -167,8 +225,8 @@ export const CurrentWork = ({ milestones }) => {
                              className="commit-link">
                             <div className="milestone-info">
                                 <h4>{milestone.title}</h4>
-                                <p>{milestone.description}</p>
-                                <span className="commit-hash">{milestone.commitHash}</span>
+                                {/* <p>{milestone.description}</p> */}
+                                {/* <span className="commit-hash">{milestone.commitHash}</span> */}
                             </div>
                         </a>
                     </div>
@@ -189,9 +247,29 @@ export const Features = ({ features }) => {
 
             {features.map((feature, index) => (
                 <div key={index} className="feature-card">
-                    <img src={feature.image} alt={feature.title} />
+
                     <h3>{feature.title}</h3>
                     <p>{feature.description}</p>
+
+                    <img 
+                        src={feature.image}
+                        alt={feature.title}
+                        style={{
+                            width: '100%',
+                            maxWidth: '800px',
+                            height: 'auto',
+                            margin: '1rem auto',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.2), 0 0 15px rgba(255, 217, 0, 0.94)'
+                        }}
+                    />
+
+                    <div style={{ 
+                        width: '80%', 
+                        margin: '0rem auto', 
+                        borderBottom: '1px solid rgba(57, 149, 255, 0.91)' 
+                    }} />
+
                 </div>
             ))}
         </div>
@@ -288,7 +366,30 @@ export const TechnologiesUsed = () => {
 
             <li><b>Frontend:</b> React, Leaflet.js (Map), Recharts (Plots), Turf.js (Spatial analysis)</li>
             <li><b>Backend:</b> Node.js (Express), OpenMeteo (Weather API)</li>
+            <li><b>Platform:</b> Backend Hosted on AWS EC2 instance, Frontend application hosted on Cloudflare.</li>
+
+            <div style={{ 
+                width: '80%', 
+                margin: '1rem auto', 
+                borderBottom: '1px solid rgba(205, 85, 15, 0.91)' 
+            }} />
+
+            <li><u><b>References & Learning Resources:</b></u></li>
+            <ul>
+                <li><a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">OpenMeteo API Docs</a> - Used for fetching weather and wind data.</li>
+                <li><a href="https://github.com/Leaflet/Leaflet" target="_blank" rel="noopener noreferrer">Leaflet.js GitHub</a> - Documentation & troubleshooting map rendering.</li>
+                <li><a href="https://github.com/danwild/leaflet-velocity" target="_blank" rel="noopener noreferrer">Leaflet Velocity Plugin</a> - Used for rendering wind vectors.</li>
+                <li><a href="https://recharts.org/en-US" target="_blank" rel="noopener noreferrer">Recharts Library</a> - For creating flight analytics charts.</li>
+                <li><a href="https://turfjs.org/" target="_blank" rel="noopener noreferrer">Turf.js</a> - Used for geospatial calculations (distance, trajectory smoothing).</li>
+                <li><a href="https://www.climate.gov/maps-data/datasets" target="_blank" rel="noopener noreferrer">Climate Data Sources</a> - Used as a reference for future ML-based predictions.</li>
+                <li><a href="https://www.geographyrealm.com/latitude-longitude/" target="_blank" rel="noopener noreferrer">Understanding Latitude & Longitude</a> - Detailed explanation of geographic coordinates.</li>
+                <li><a href="https://www.spatialanalysisonline.com/HTML/radial_basis_and_spline_functi.htm" target="_blank" rel="noopener noreferrer">Radial Basis Function Interpolation</a> - Understanding RBF interpolation for generating structured wind grid data.</li>
+                <li><a href="https://wlog.viltstigen.se/articles/2021/11/08/visualizing-wind-using-leaflet/" target="_blank" rel="noopener noreferrer">Visualizing Wind with Leaflet</a> - Guide on implementing wind visualization using Leaflet and velocity layers.</li>
+                <li>Many more...</li>
+                </ul>
         </ul>
+
+
     );
 };
 

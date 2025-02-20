@@ -44,8 +44,8 @@ const ProjectInfo = ({ onClose }) => {
         work: { title: "Current Work", content: <CurrentWork milestones={milestones} /> },
         features: { title: "Features", content: <Features features={features} /> },
         future: { title: "Future Plans", content: <FuturePlans /> },
-        challenges: { title: "Challenges Faced", content: <ChallengesFaced /> },
-        tech: { title: "Technologies Used", content: <TechnologiesUsed /> },
+        challenges: { title: "Challenges", content: <ChallengesFaced /> },
+        tech: { title: "Tech Stack", content: <TechnologiesUsed /> },
         // lessons: { title: "Lessons Learned", content: <LessonsLearned /> },
     };
 

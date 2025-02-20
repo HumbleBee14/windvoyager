@@ -1,9 +1,15 @@
 {
     "milestones": [
       {
+        "title": "First Backend API Success",
+        "description": "Implemented basic map with balloon markers",
+        "commitHash": "46829af01ec90a133a5c959a18177b126528745d",
+        "commitImage": "https://example.com/commits/initial-map.png"
+      },
+      {
         "title": "Initial Map Integration",
         "description": "Implemented basic map with balloon markers",
-        "commitHash": "a1b2c3d",
+        "commitHash": "bff9665ff331a0fe501e05f554af896ce5b483d8",
         "commitImage": "https://example.com/commits/initial-map.png"
       },
       {
@@ -13,9 +19,45 @@
         "commitImage": "https://example.com/commits/trajectory.png"
       },
       {
-        "title": "Wind Data Integration",
-        "description": "Implemented wind velocity overlay",
-        "commitHash": "i7j8k9l",
+        "title": "Added Wind Velocity Grid Layer and Satellite image layout",
+        "description": "Implemented wind velocity overlay with satellite imagery for better visualization",
+        "commitHash": "68c351dfbfb986f166ce00f89e5bc91c61482ea1",
+        "commitImage": "https://example.com/commits/wind-data.png"
+      },
+      {
+        "title": "Generated WindGrid data using barycentric & Radial interpolation for Leaflet Wind Velocity visualization.",
+        "description": "",
+        "commitHash": "i7j3b2668cb0ac99bbf19e1fcccb55d556a1c5881f78k9dl",
+        "commitImage": "https://example.com/commits/wind-data.png"
+      },
+      {
+        "title": "Added Metrics Chart (Recharts)",
+        "description": "Implemented a metrics chart to visualize wind velocity and other key parameters.",
+        "commitHash": "a14b3f983b1196d65008216a6ef01b000fd7e39b",
+        "commitImage": "https://example.com/commits/wind-data.png"
+      },
+      {
+        "title": "Timezone grouping Filtering",
+        "description": "Implemented timezone grouping filtering",
+        "commitHash": "6cb012a31265e8814777cd6ce766f23be826cb1a",
+        "commitImage": "https://example.com/commits/wind-data.png"
+      },
+      {
+        "title": "Constellation Balloons Trajectory Animation",
+        "description": "Implemented trajectory movement animation with wind velocity overlay",
+        "commitHash": "ibe437269bca06060ceafab183be69ab1c5a891ab7j8k9dl",
+        "commitImage": "https://example.com/commits/wind-data.png"
+      },
+      {
+        "title": "3rd Party Weather API Integration - OpenMeteo",
+        "description": "3rd Party Weather API Integration - OpenMeteo",
+        "commitHash": "i7j8k9dl",
+        "commitImage": "fcbae59b615db15722815189f39a2223decc1e42"
+      },
+      {
+        "title": "Added heatmap Layer",
+        "description": "Added heatmap Layer",
+        "commitHash": "3a32fc2c2c7e4bb7c901429d57bc9f773f1465ca",
         "commitImage": "https://example.com/commits/wind-data.png"
       }
     ]

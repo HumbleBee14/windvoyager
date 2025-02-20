@@ -441,7 +441,7 @@ const BalloonTracker = ({balloonData, initialBalloonId }) => {
 
         {showChart && (
             <Modal onClose={() => setShowChart(false)}>
-                <BalloonChart trajectoryData={balloonDataLog} onClose={() => setShowPopup(false)} />
+                <BalloonChart trajectoryData={balloonDataLog} onClose={() => setShowChart(false)} />
             </Modal>
         )}
 

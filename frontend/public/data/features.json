@@ -2,33 +2,43 @@
     "features": [
       {
         "title": "Constellation View",
-        "description": "View all active balloons in real-time",
-        "image": "https://example.com/features/constellation.png"
+        "description": "View all active balloons in real-time with an hourly snapshot selector for historical data analysis.",
+        "image": "https://res.cloudinary.com/dqrndttrt/image/upload/f_auto,q_auto:good,w_1200,h_800,c_fit/v1740028941/Selected_Hourly_Constelleation_View_clav5y.png"
       },
       {
         "title": "Individual Balloon Tracking",
-        "description": "Track single balloon with detailed metrics",
-        "image": "https://example.com/features/tracking.png"
+        "description": "Track a single balloon's trajectory over 24 hours with altitude, velocity, ascent/descent rates, and weather conditions.",
+        "image": "https://res.cloudinary.com/dqrndttrt/image/upload/f_auto,q_auto:good,w_1200,h_800,c_fit/v1740028943/Wind_Balloon_Velcotiy_fhtecm.png"
       },
       {
-        "title": "Satellite Overlay",
-        "description": "Toggle between map and satellite views",
-        "image": "https://example.com/features/satellite.png"
+        "title": "Satellite & Global Wind Flow Overlay",
+        "description": "Toggle between satellite and standard map views while visualizing real-time global wind circulation patterns, including jet streams and cyclonic activity.",
+        "image": "https://res.cloudinary.com/dqrndttrt/image/upload/f_auto,q_auto:good,w_1200,h_800,c_fit/v1740028944/Global_Wind_Velcotiy_Pattern_jtyk0f.png"
       },
       {
-        "title": "Wind Velocity Layer",
-        "description": "Visualize wind patterns and speeds",
-        "image": "https://example.com/features/wind.png"
+        "title": "Filter Timezone-Based Weather Balloons & Animate Trajectory",
+        "description": "Select balloons based on timezones and visualize their animated movement over the past 24 hours, tracking their shifting positions across regions in real-time.",
+        "image": "https://res.cloudinary.com/dqrndttrt/image/upload/f_auto,q_auto:good,w_1200,h_800,c_fit/v1740028942/Track_Trace_Ballon_Movement_in_a_selected_Timezone_over_24hr_bweewn.png"
       },
       {
-        "title": "Analytics Charts",
-        "description": "View altitude and trajectory analytics",
-        "image": "https://example.com/features/charts.png"
+        "title": "Wind Velocity Patterns & Data Log (Old)",
+        "description": "Visualize balloon wind speeds, directions, and trajectory paths with an interactive data log popup displaying altitude, ascent rates, and other key telemetry details.",
+        "image": "https://res.cloudinary.com/dqrndttrt/image/upload/f_auto,q_auto:good,w_1200,h_800,c_fit/v1740028944/Data_Log_ckuxno.png"
       },
       {
-        "title": "Data Logger",
-        "description": "Access detailed balloon telemetry",
-        "image": "https://example.com/features/logger.png"
+        "title": "Flight Analytics Chart",
+        "description": "Analyze altitude, wind speed, ascent rate, acceleration, and ground temperature trends to study atmospheric variations and balloon trajectory behavior.",
+        "image": "https://res.cloudinary.com/dqrndttrt/image/upload/f_auto,q_auto:good,w_1200,h_800,c_fit/v1740028938/Added_Grund_Temperature_plot_graph_whb4ez.png"
+      },
+      {
+        "title": " Data Logger (Draggable & Responsive)",
+        "description": "Enhanced UI with drag & resize support, displaying altitude, wind speed, ascent rate, and temperature over 24 hours.",
+        "image": "https://res.cloudinary.com/dqrndttrt/image/upload/f_auto,q_auto:good,w_1200,h_800,c_fit/v1740028940/Updated_Data_Log_Popup_with_Draggable_Header_and_better_UI_bdih9a.png"
+      },
+      {
+        "title": "🌡️ Temperature Heatmap Along Balloon's Trajectory",
+        "description": "Visualize ground-level temperature variations along the balloon's path, with an overlaid heatmap representing real-time atmospheric conditions.",
+        "image": "https://res.cloudinary.com/dqrndttrt/image/upload/f_auto,q_auto:good,w_1200,h_800,c_fit/v1740028940/Heatmap_and_Wwaether_API_data_added_ic8yly.png"
       }
     ]
   }

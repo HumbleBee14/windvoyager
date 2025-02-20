@@ -3,6 +3,7 @@ import { BarChart, Bar, LineChart, Line, ScatterChart, Scatter, XAxis, YAxis, Ca
 
 const chartOptions = ["Bar Chart", "Line Chart", "Scatter Plot"];
 
+// INCOMPLETE
 const ConstellationGraph = ({ groupedData, onClose }) => {
   const [chartType, setChartType] = useState("Bar Chart"); // Default Chart
 
