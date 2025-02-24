@@ -15,7 +15,8 @@ export const fetchWeatherForTrajectory = async (trajectoryData) => {
         const requestBody = {
           locations: trajectoryData.map((point) => ({
               latitude: point.position[0],
-              longitude: point.position[1]
+              longitude: point.position[1],
+              altitude: point.altitude
           }))
         };
 

@@ -31,7 +31,7 @@ const fetchBulkWeatherData = async (locations) => {
   
   const url = `https://api.open-meteo.com/v1/forecast?` +
   `${locationParams}&` +
-  `hourly=temperature_2m,windspeed_10m,winddirection_10m,air_pressure_11m,humidity_2m&` +
+  `hourly=temperature_2m,windspeed_10m,winddirection_10m,pressure_msl,relative_humidity_2m,visibility&` +
   `past_days=1&` +  // Get just 1 day of past data (previous day)
   `forecast_days=1&` + // Get just 1 day of forecast data (today)
   `current_weather=true&` +

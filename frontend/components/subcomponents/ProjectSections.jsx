@@ -384,6 +384,7 @@ export const TechnologiesUsed = () => {
                 <li><b>Climate Data:</b> <a href="https://www.climate.gov/maps-data/datasets" target="_blank" rel="noopener noreferrer">NOAA Climate Data</a> - Reference data for ML model development</li>
                 <li><b>Geographic Fundamentals:</b> <a href="https://www.geographyrealm.com/latitude-longitude/" target="_blank" rel="noopener noreferrer">Geographic Coordinate Systems</a> - Essential concepts for location tracking</li>
                 <li><b>Wind Visualization:</b> <a href="https://www.spatialanalysisonline.com/HTML/radial_basis_and_spline_functi.htm" target="_blank" rel="noopener noreferrer">RBF Interpolation</a> & <a href="https://wlog.viltstigen.se/articles/2021/11/08/visualizing-wind-using-leaflet/" target="_blank" rel="noopener noreferrer">Wind Layer Implementation</a> - Advanced wind data visualization techniques</li>
+                {/* https://artificialintelligencemadesimple.substack.com/p/how-google-built-an-open-source-ai */}
             </ul>
         </ul>
     );
