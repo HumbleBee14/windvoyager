@@ -357,7 +357,6 @@ export const ChallengesFaced = () => {
 
 export const TechnologiesUsed = () => {
     return (
-        
         <ul>
             <div style={{ 
                 width: '80%', 
@@ -365,9 +364,9 @@ export const TechnologiesUsed = () => {
                 borderBottom: '1px solid rgba(205, 85, 15, 0.91)' 
             }} />
 
-            <li><b>Frontend:</b> React, Leaflet.js (Map), Recharts (Plots), Turf.js (Spatial analysis)</li>
-            <li><b>Backend:</b> Node.js (Express), OpenMeteo (Weather API)</li>
-            <li><b>Platform:</b> Backend Hosted on <b>AWS EC2 Linux instance</b>, Frontend application hosted on Cloudflare.</li>
+            <li><b>Frontend Stack:</b> React (component-based UI), Leaflet.js (interactive mapping), Recharts (data visualization), Turf.js (geospatial calculations)</li>
+            <li><b>Backend Stack:</b> Node.js/Express (API server), OpenMeteo API (real-time weather data integration)</li>
+            <li><b>Infrastructure:</b> AWS EC2 (Linux-based backend hosting), Cloudflare (frontend deployment & CDN)</li>
 
             <div style={{ 
                 width: '80%', 
@@ -375,23 +374,18 @@ export const TechnologiesUsed = () => {
                 borderBottom: '1px solid rgba(205, 85, 15, 0.91)' 
             }} />
 
-            <li><u><b>References & Learning Resources:</b></u></li>
+            <li><u><b>Key Technical Resources:</b></u></li>
             <ul>
-                <li><a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">OpenMeteo API Docs</a> - Used for fetching weather and wind data.</li>
-                <li><a href="https://github.com/Leaflet/Leaflet" target="_blank" rel="noopener noreferrer">Leaflet.js GitHub</a> - Documentation & troubleshooting map rendering.</li>
-                <li><a href="https://github.com/danwild/leaflet-velocity" target="_blank" rel="noopener noreferrer">Leaflet Velocity Plugin</a> - Used for rendering wind vectors.</li>
-                <li><a href="https://recharts.org/en-US" target="_blank" rel="noopener noreferrer">Recharts Library</a> - For creating flight analytics charts.</li>
-                <li><a href="https://turfjs.org/" target="_blank" rel="noopener noreferrer">Turf.js</a> - Used for geospatial calculations (distance, trajectory smoothing).</li>
-                <li><a href="https://www.climate.gov/maps-data/datasets" target="_blank" rel="noopener noreferrer">Climate Data Sources</a> - Used as a reference for future ML-based predictions.</li>
-                <li><a href="https://openai.com/" target="_blank" rel="noopener noreferrer">GPT & other LLM resources</a> - For both learning and development purposes.</li>
-                <li><a href="https://www.geographyrealm.com/latitude-longitude/" target="_blank" rel="noopener noreferrer">Understanding Latitude & Longitude</a> - Detailed explanation of geographic coordinates.</li>
-                <li><a href="https://www.spatialanalysisonline.com/HTML/radial_basis_and_spline_functi.htm" target="_blank" rel="noopener noreferrer">Radial Basis Function Interpolation</a> - Understanding RBF interpolation for generating structured wind grid data.</li>
-                <li><a href="https://wlog.viltstigen.se/articles/2021/11/08/visualizing-wind-using-leaflet/" target="_blank" rel="noopener noreferrer">Visualizing Wind with Leaflet</a> - Guide on implementing wind visualization using Leaflet and velocity layers.</li>
-                <li>Many more...</li>
-                </ul>
+                <li><b>Weather Balloon Systems:</b> <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7180688/" target="_blank" rel="noopener noreferrer">High-Altitude Balloon Sensor System Design</a> - Core concepts of weather balloon telemetry</li>
+                <li><b>Weather Data:</b> <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">OpenMeteo API</a> - Free weather data integration for temperature and wind patterns</li>
+                <li><b>Mapping:</b> <a href="https://github.com/Leaflet/Leaflet" target="_blank" rel="noopener noreferrer">Leaflet.js</a> & <a href="https://github.com/danwild/leaflet-velocity" target="_blank" rel="noopener noreferrer">Leaflet-Velocity</a> - Interactive maps and wind vector visualization</li>
+                <li><b>Data Visualization:</b> <a href="https://recharts.org/en-US" target="_blank" rel="noopener noreferrer">Recharts</a> - Responsive charting for flight analytics</li>
+                <li><b>Geospatial Analysis:</b> <a href="https://turfjs.org/" target="_blank" rel="noopener noreferrer">Turf.js</a> - Advanced geographic calculations and trajectory analysis</li>
+                <li><b>Climate Data:</b> <a href="https://www.climate.gov/maps-data/datasets" target="_blank" rel="noopener noreferrer">NOAA Climate Data</a> - Reference data for ML model development</li>
+                <li><b>Geographic Fundamentals:</b> <a href="https://www.geographyrealm.com/latitude-longitude/" target="_blank" rel="noopener noreferrer">Geographic Coordinate Systems</a> - Essential concepts for location tracking</li>
+                <li><b>Wind Visualization:</b> <a href="https://www.spatialanalysisonline.com/HTML/radial_basis_and_spline_functi.htm" target="_blank" rel="noopener noreferrer">RBF Interpolation</a> & <a href="https://wlog.viltstigen.se/articles/2021/11/08/visualizing-wind-using-leaflet/" target="_blank" rel="noopener noreferrer">Wind Layer Implementation</a> - Advanced wind data visualization techniques</li>
+            </ul>
         </ul>
-
-
     );
 };
 

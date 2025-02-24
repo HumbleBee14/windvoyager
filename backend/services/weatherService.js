@@ -22,6 +22,7 @@ const fetchWeatherData = async (latitude, longitude) => {
 };
 
 // ----------------------------------------------------------------------
+//  TODO: We need to add Air Pressure and humidity also! What about other factors like, is_Day? snow? rain?
 
 const fetchBulkWeatherData = async (locations) => {
   const locationParams = locations.map(loc => 
@@ -30,7 +31,7 @@ const fetchBulkWeatherData = async (locations) => {
   
   const url = `https://api.open-meteo.com/v1/forecast?` +
   `${locationParams}&` +
-  `hourly=temperature_2m,windspeed_10m,winddirection_10m&` +
+  `hourly=temperature_2m,windspeed_10m,winddirection_10m,air_pressure_11m,humidity_2m&` +
   `past_days=1&` +  // Get just 1 day of past data (previous day)
   `forecast_days=1&` + // Get just 1 day of forecast data (today)
   `current_weather=true&` +
