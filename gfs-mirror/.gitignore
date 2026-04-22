@@ -13,3 +13,5 @@ uv.lock
 WBRAW/
 WBPROC/
 /tmp/gfs-mirror/
+smoke-output/
+.smoke-output/

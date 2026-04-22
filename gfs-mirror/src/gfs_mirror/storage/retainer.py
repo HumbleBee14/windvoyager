@@ -47,11 +47,13 @@ def publish(layout: StorageLayout, cycle: Cycle) -> None:
 
 
 def prune_except(layout: StorageLayout, keep: Cycle) -> None:
-    """Delete every proc and raw dir that isn't the given cycle.
+    """Post-publish cleanup: keep only the newly-published cycle's proc dir.
 
-    This is the universal cleanup: called right after a successful publish.
-    Handles the "skip broken cycle" case automatically — any .partial dirs
-    for cycles we abandoned get wiped alongside truly old complete cycles.
+    Deletes every other proc dir (old-good, abandoned-partial, stray) and
+    ALL raw dirs — including `keep`'s own raw, since after publish its raw
+    files have already served their purpose (task spec: "delete all files
+    after the cycle is complete"). The next cycle's runner recreates its
+    raw dir fresh.
     """
     keep_proc = layout.proc_cycle_dir(keep, partial=False)
     for entry in layout.proc_root.iterdir() if layout.proc_root.exists() else []:
@@ -62,11 +64,8 @@ def prune_except(layout: StorageLayout, keep: Cycle) -> None:
         log.info("pruning proc dir %s", entry)
         shutil.rmtree(entry, ignore_errors=True)
 
-    keep_raw = layout.raw_cycle_dir(keep)
     for entry in layout.raw_root.iterdir() if layout.raw_root.exists() else []:
         if not entry.is_dir():
-            continue
-        if entry == keep_raw:
             continue
         log.info("pruning raw dir %s", entry)
         shutil.rmtree(entry, ignore_errors=True)

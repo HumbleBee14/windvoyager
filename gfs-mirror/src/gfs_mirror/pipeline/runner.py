@@ -25,9 +25,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import Executor, ProcessPoolExecutor
+from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Iterator
 
 from gfs_mirror.config import Config
 from gfs_mirror.domain.cycle import Cycle
@@ -57,6 +58,12 @@ class CycleResult:
     stuck_leads: list[int]
 
 
+@contextmanager
+def _default_pool(workers: int) -> Iterator[Executor]:
+    with ProcessPoolExecutor(max_workers=workers) as pool:
+        yield pool
+
+
 async def run_cycle(
     cycle: Cycle,
     config: Config,
@@ -65,6 +72,7 @@ async def run_cycle(
     process_fn: Callable[[str, str], bool],
     *,
     resume_manifest: Manifest | None = None,
+    pool_factory: Callable[[int], AbstractContextManager[Executor]] | None = None,
 ) -> CycleResult:
     """Drive one cycle to completion (or stuck). Idempotent; safe to re-run on resume."""
     layout.ensure_roots()
@@ -91,8 +99,9 @@ async def run_cycle(
         dl_q.put_nowait(h)
 
     deadline = time.monotonic() + config.cycle_timeout_hours * 3600
+    pool_cm = (pool_factory or _default_pool)(config.process_concurrency)
 
-    with ProcessPoolExecutor(max_workers=config.process_concurrency) as pool:
+    with pool_cm as pool:
         download_tasks = [
             asyncio.create_task(
                 _download_worker(i, dl_q, pr_q, s3, layout, cycle, config, manifest, stuck, lock)
@@ -126,11 +135,10 @@ async def run_cycle(
                     break
                 await asyncio.sleep(0.5)
         finally:
-            # Tell workers to stop. Put sentinels; cancel any that are blocked on put().
-            for _ in download_tasks:
-                dl_q.put_nowait(_STOP)
-            for _ in process_tasks:
-                pr_q.put_nowait(_STOP)
+            # Cancel all workers; they'll raise CancelledError on next await.
+            # Simpler and deadlock-free vs. sentinel-via-put on potentially-full queues.
+            for t in (*download_tasks, *process_tasks):
+                t.cancel()
             await asyncio.gather(*download_tasks, *process_tasks, return_exceptions=True)
 
     async with lock:

@@ -74,7 +74,10 @@ def test_prune_except_wipes_everything_else(tmp_path):
     assert lay.proc_cycle_dir(keep, partial=False).exists()
     assert not lay.proc_cycle_dir(old, partial=False).exists()
     assert not lay.proc_cycle_dir(stuck, partial=True).exists()
-    assert lay.raw_cycle_dir(keep).exists()
+    # Post-publish cleanup wipes ALL raw dirs — including the kept cycle's own,
+    # since processing has already consumed its files (task spec: "delete all
+    # files after the cycle is complete").
+    assert not lay.raw_cycle_dir(keep).exists()
     assert not lay.raw_cycle_dir(old).exists()
     assert not lay.raw_cycle_dir(stuck).exists()
 
