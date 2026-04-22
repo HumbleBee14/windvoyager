@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+.env
+uv.lock
+
+# local data
+WBRAW/
+WBPROC/
+/tmp/gfs-mirror/
