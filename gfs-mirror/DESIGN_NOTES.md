@@ -126,9 +126,16 @@ Task warned: GRIB sometimes appears at its S3 URL before upload finishes. Strate
 - **Verify GRIB2 magic bytes (`GRIB`) before calling `process_file`.** Catches the "S3 gave us 0 bytes" case without paying for the 40s processing attempt. Trivial.
 - **0.25° support** needs one env flip, but for production you'd probably want a cache of which FFFs actually exist per grid, since `0p25` is hourly 0–120h and 3-hourly 120–384h — the existing schedule parser handles it but I haven't exercised it against the real bucket.
 
-## 9. Known open threads (tests)
+## 9. Tests
 
-The unit tier (77 tests) is green in <0.1s. The integration + invariant tiers are written and pass individually but one combination (corruption-retry stuck-lead test under pytest-asyncio session) deadlocks — a test-harness issue, not a production one. The live smoke at [`scripts/smoke.py`](scripts/smoke.py) runs the full pipeline against the real NOAA bucket and is the authoritative "it works" proof. To be tightened before merge.
+All green: **87 tests in 7.67s.**
+
+- **Unit** (77): `parse_schedule` boundaries, `Cycle` math, config validation, path layout, manifest roundtrip + atomicity, retainer publish/prune, recovery scan + repair.
+- **Integration** (7): fake-S3 happy path, transient-corruption retry, permanent-corruption stuck, 404-becomes-available, resume from partial manifest, interrupted-rename repair.
+- **Invariant** (3): PLAN §7 — N→N+1 clean swap, skip-broken-N+1 preserves N until N+2 wins, never-empty across a 4-cycle sequence with a stuck cycle in the middle.
+- **Live smoke** ([`scripts/smoke.py`](scripts/smoke.py)): real NOAA bucket, 2 leads, ~3s end-to-end. The authoritative "it works" proof.
+
+**Lesson learned along the way:** the first integration run appeared to hang. Root cause was a testing-only bug in `conftest.fast_backoff` — it monkeypatched `download.backoff_seconds` but `runner.py` imports the function by name (`from ... import backoff_seconds`), so the runner held its own reference that wasn't rebound. With the real 30s–5min backoff active, retry-heavy tests (stuck leads × 5 retries) took ~12 min each. Fix: patch both module-level names. Not a production bug.
 
 ## 10. File map with LOC
 

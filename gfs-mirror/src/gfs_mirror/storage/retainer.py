@@ -49,35 +49,50 @@ def publish(layout: StorageLayout, cycle: Cycle) -> None:
 def prune_except(layout: StorageLayout, keep: Cycle) -> None:
     """Post-publish cleanup: keep only the newly-published cycle's proc dir.
 
-    Deletes every other proc dir (old-good, abandoned-partial, stray) and
+    Deletes every other proc hour-dir (old-good, abandoned-partial, stray) and
     ALL raw dirs — including `keep`'s own raw, since after publish its raw
     files have already served their purpose (task spec: "delete all files
     after the cycle is complete"). The next cycle's runner recreates its
     raw dir fresh.
+
+    Empty date-level parent dirs are also removed so the tree doesn't grow.
     """
     keep_proc = layout.proc_cycle_dir(keep, partial=False)
-    for entry in layout.proc_root.iterdir() if layout.proc_root.exists() else []:
-        if not entry.is_dir():
+    for cid, is_partial in layout.iter_proc_entries():
+        cycle_path_partial = is_partial
+        # Reconstruct the hour-dir path from the entry info.
+        date_str, hour_str = cid[:8], cid[8:]
+        hour_name = f"{hour_str}{'.partial' if cycle_path_partial else ''}"
+        entry_path = layout.proc_root / date_str / hour_name
+        if entry_path == keep_proc:
             continue
-        if entry == keep_proc:
-            continue
-        log.info("pruning proc dir %s", entry)
-        shutil.rmtree(entry, ignore_errors=True)
+        log.info("pruning proc dir %s", entry_path)
+        shutil.rmtree(entry_path, ignore_errors=True)
+    # Remove empty date-level dirs left behind (except the one we're keeping in).
+    for date_dir in layout.iter_date_dirs():
+        try:
+            if not any(date_dir.iterdir()):
+                date_dir.rmdir()
+        except OSError:
+            pass
 
-    for entry in layout.raw_root.iterdir() if layout.raw_root.exists() else []:
-        if not entry.is_dir():
-            continue
-        log.info("pruning raw dir %s", entry)
-        shutil.rmtree(entry, ignore_errors=True)
+    # Wipe ALL raw dirs (date-level and their contents).
+    for date_dir in layout.iter_raw_date_dirs():
+        log.info("pruning raw date dir %s", date_dir)
+        shutil.rmtree(date_dir, ignore_errors=True)
 
 
 def find_current_good(layout: StorageLayout) -> str | None:
     """Return the cycle_id of the most recent complete cycle, or None."""
-    candidates = [
-        cid
-        for cid, is_partial in layout.iter_proc_entries()
-        if not is_partial and (layout.proc_root / cid / COMPLETE_MARKER).exists()
-    ]
+    candidates: list[str] = []
+    for cid, is_partial in layout.iter_proc_entries():
+        if is_partial:
+            continue
+        from gfs_mirror.domain.cycle import Cycle
+
+        c = Cycle.from_string(cid)
+        if layout.complete_marker(c, partial=False).exists():
+            candidates.append(cid)
     return max(candidates) if candidates else None
 
 

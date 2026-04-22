@@ -17,27 +17,27 @@ def test_ensure_roots_creates_dirs(tmp_path):
     assert lay.proc_root.is_dir()
 
 
-def test_raw_paths(tmp_path):
+def test_raw_paths_nested_by_date(tmp_path):
     lay = _layout(tmp_path)
     c = Cycle(2026, 4, 22, 12)
-    assert lay.raw_cycle_dir(c) == tmp_path / "raw" / "2026042212"
-    assert lay.raw_file(c, 6) == tmp_path / "raw" / "2026042212" / "f006.grib2"
-    assert lay.raw_file(c, 192) == tmp_path / "raw" / "2026042212" / "f192.grib2"
+    assert lay.raw_cycle_dir(c) == tmp_path / "raw" / "20260422" / "12"
+    assert lay.raw_file(c, 6) == tmp_path / "raw" / "20260422" / "12" / "f006.grib2"
+    assert lay.raw_file(c, 192) == tmp_path / "raw" / "20260422" / "12" / "f192.grib2"
 
 
 def test_proc_paths_partial_and_final(tmp_path):
     lay = _layout(tmp_path)
     c = Cycle(2026, 4, 22, 12)
-    assert lay.proc_cycle_dir(c, partial=True) == tmp_path / "proc" / "2026042212.partial"
-    assert lay.proc_cycle_dir(c, partial=False) == tmp_path / "proc" / "2026042212"
+    assert lay.proc_cycle_dir(c, partial=True) == tmp_path / "proc" / "20260422" / "12.partial"
+    assert lay.proc_cycle_dir(c, partial=False) == tmp_path / "proc" / "20260422" / "12"
 
 
 def test_proc_file_is_forecast_timestamp(tmp_path):
     lay = _layout(tmp_path)
     c = Cycle(2026, 4, 22, 12)
     p = lay.proc_file(c, 6, partial=True)
-    assert p.parent.name == "2026042212.partial"
-    # Filename is the unix timestamp of the forecast moment (18Z same day).
+    assert p.parent.name == "12.partial"
+    assert p.parent.parent.name == "20260422"
     assert p.name == str(c.forecast_timestamp(6))
 
 
@@ -51,16 +51,26 @@ def test_marker_and_manifest_paths(tmp_path):
 def test_iter_proc_entries_separates_partial(tmp_path):
     lay = _layout(tmp_path)
     lay.ensure_roots()
-    (lay.proc_root / "2026042200").mkdir()
-    (lay.proc_root / "2026042206.partial").mkdir()
-    (lay.proc_root / "2026042212").mkdir()
+    (lay.proc_root / "20260422" / "00").mkdir(parents=True)
+    (lay.proc_root / "20260422" / "06.partial").mkdir(parents=True)
+    (lay.proc_root / "20260422" / "12").mkdir(parents=True)
     (lay.proc_root / "some-file.txt").write_text("")  # ignored (not a dir)
+    (lay.proc_root / "notadatefolder").mkdir()  # ignored (not 8 digits)
     entries = lay.iter_proc_entries()
     assert entries == [
         ("2026042200", False),
         ("2026042206", True),
         ("2026042212", False),
     ]
+
+
+def test_iter_proc_entries_across_dates(tmp_path):
+    lay = _layout(tmp_path)
+    lay.ensure_roots()
+    (lay.proc_root / "20260422" / "18").mkdir(parents=True)
+    (lay.proc_root / "20260423" / "00").mkdir(parents=True)
+    entries = lay.iter_proc_entries()
+    assert entries == [("2026042218", False), ("2026042300", False)]
 
 
 def test_iter_proc_entries_empty_when_no_proc_root(tmp_path):
@@ -71,6 +81,15 @@ def test_iter_proc_entries_empty_when_no_proc_root(tmp_path):
 def test_iter_raw_cycle_ids(tmp_path):
     lay = _layout(tmp_path)
     lay.ensure_roots()
-    (lay.raw_root / "2026042200").mkdir()
-    (lay.raw_root / "2026042212").mkdir()
+    (lay.raw_root / "20260422" / "00").mkdir(parents=True)
+    (lay.raw_root / "20260422" / "12").mkdir(parents=True)
     assert lay.iter_raw_cycle_ids() == ["2026042200", "2026042212"]
+
+
+def test_iter_ignores_invalid_hour_names(tmp_path):
+    lay = _layout(tmp_path)
+    lay.ensure_roots()
+    (lay.proc_root / "20260422" / "13").mkdir(parents=True)  # invalid hour
+    (lay.proc_root / "20260422" / "12").mkdir(parents=True)  # valid
+    entries = lay.iter_proc_entries()
+    assert entries == [("2026042212", False)]

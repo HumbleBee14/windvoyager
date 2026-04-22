@@ -18,7 +18,6 @@ def test_fresh_filesystem(tmp_path):
     assert state.current_good is None
     assert state.in_progress is None
     assert state.in_progress_manifest is None
-    # roots now exist
     assert lay.raw_root.is_dir()
     assert lay.proc_root.is_dir()
 
@@ -27,15 +26,16 @@ def test_detects_current_good_and_in_progress(tmp_path):
     lay = _layout(tmp_path)
     lay.ensure_roots()
 
-    # current good: 06Z (complete)
-    good = lay.proc_root / "2026042206"
-    good.mkdir()
+    # current good: 06Z complete
+    c_good = Cycle(2026, 4, 22, 6)
+    good = lay.proc_cycle_dir(c_good, partial=False)
+    good.mkdir(parents=True)
     (good / ".complete").touch()
 
     # in progress: 12Z partial with a manifest
     c_partial = Cycle(2026, 4, 22, 12)
     partial = lay.proc_cycle_dir(c_partial, partial=True)
-    partial.mkdir()
+    partial.mkdir(parents=True)
     m = mf.new_manifest(c_partial.id, "0-48:3,48-192:6", "1p00", [0, 3])
     m.mark_done(0)
     mf.write(lay.manifest_path(c_partial, partial=True), m)
@@ -48,12 +48,11 @@ def test_detects_current_good_and_in_progress(tmp_path):
 
 
 def test_finishes_interrupted_rename(tmp_path):
-    """If .partial has .complete inside and final dir is absent, we rename it."""
     lay = _layout(tmp_path)
     lay.ensure_roots()
     c = Cycle(2026, 4, 22, 12)
     partial = lay.proc_cycle_dir(c, partial=True)
-    partial.mkdir()
+    partial.mkdir(parents=True)
     (partial / ".complete").touch()
     (partial / "some_ts").write_text("data")
 
@@ -70,10 +69,10 @@ def test_finishes_interrupted_rename(tmp_path):
 def test_final_dir_without_marker_is_pruned(tmp_path):
     lay = _layout(tmp_path)
     lay.ensure_roots()
-    bogus = lay.proc_root / "2026042206"
-    bogus.mkdir()
+    c = Cycle(2026, 4, 22, 6)
+    bogus = lay.proc_cycle_dir(c, partial=False)
+    bogus.mkdir(parents=True)
     (bogus / "some_ts").write_text("x")
-    # no .complete marker!
 
     state = scan_and_repair(lay)
     assert state.current_good is None
@@ -83,10 +82,12 @@ def test_final_dir_without_marker_is_pruned(tmp_path):
 def test_keeps_newest_partial_deletes_older_ones(tmp_path):
     lay = _layout(tmp_path)
     lay.ensure_roots()
-    older = lay.proc_root / "2026042206.partial"
-    newer = lay.proc_root / "2026042212.partial"
-    older.mkdir()
-    newer.mkdir()
+    older_c = Cycle(2026, 4, 22, 6)
+    newer_c = Cycle(2026, 4, 22, 12)
+    older = lay.proc_cycle_dir(older_c, partial=True)
+    newer = lay.proc_cycle_dir(newer_c, partial=True)
+    older.mkdir(parents=True)
+    newer.mkdir(parents=True)
 
     state = scan_and_repair(lay)
     assert state.in_progress is not None and state.in_progress.id == "2026042212"
@@ -97,13 +98,16 @@ def test_keeps_newest_partial_deletes_older_ones(tmp_path):
 def test_prunes_orphan_raw_dirs(tmp_path):
     lay = _layout(tmp_path)
     lay.ensure_roots()
-    # good cycle exists in proc
-    (lay.proc_root / "2026042212").mkdir()
-    (lay.proc_root / "2026042212" / ".complete").touch()
-    # raw dirs: matching keep, plus an orphan
-    (lay.raw_root / "2026042212").mkdir()
-    (lay.raw_root / "2026042100").mkdir()
+    keep_c = Cycle(2026, 4, 22, 12)
+    orphan_c = Cycle(2026, 4, 21, 0)
+
+    keep_proc = lay.proc_cycle_dir(keep_c, partial=False)
+    keep_proc.mkdir(parents=True)
+    (keep_proc / ".complete").touch()
+
+    lay.raw_cycle_dir(keep_c).mkdir(parents=True)
+    lay.raw_cycle_dir(orphan_c).mkdir(parents=True)
 
     scan_and_repair(lay)
-    assert (lay.raw_root / "2026042212").exists()
-    assert not (lay.raw_root / "2026042100").exists()
+    assert lay.raw_cycle_dir(keep_c).exists()
+    assert not lay.raw_cycle_dir(orphan_c).exists()

@@ -44,19 +44,23 @@ def scan_and_repair(layout: StorageLayout) -> RecoveryState:
     _finish_interrupted_renames(layout)
 
     entries = layout.iter_proc_entries()
-    complete_ids = sorted(
-        cid
-        for cid, is_partial in entries
-        if not is_partial and (layout.proc_root / cid / COMPLETE_MARKER).exists()
-    )
+    complete_ids: list[str] = []
+    for cid, is_partial in entries:
+        if is_partial:
+            continue
+        c = Cycle.from_string(cid)
+        if layout.complete_marker(c, partial=False).exists():
+            complete_ids.append(cid)
+    complete_ids.sort()
     current_good = Cycle.from_string(complete_ids[-1]) if complete_ids else None
 
     # If there's a "complete" dir without the marker, it's corrupt — delete it.
     for cid, is_partial in entries:
         if is_partial:
             continue
-        if not (layout.proc_root / cid / COMPLETE_MARKER).exists():
-            stale = layout.proc_root / cid
+        c = Cycle.from_string(cid)
+        if not layout.complete_marker(c, partial=False).exists():
+            stale = layout.proc_cycle_dir(c, partial=False)
             log.warning("final dir %s has no .complete marker; pruning", stale)
             shutil.rmtree(stale, ignore_errors=True)
 
@@ -67,7 +71,8 @@ def scan_and_repair(layout: StorageLayout) -> RecoveryState:
     if partials:
         keep_id = partials[-1]
         for cid in partials[:-1]:
-            stale = layout.proc_root / f"{cid}{PARTIAL_SUFFIX}"
+            c = Cycle.from_string(cid)
+            stale = layout.proc_cycle_dir(c, partial=True)
             log.warning("extra partial dir %s; pruning", stale)
             shutil.rmtree(stale, ignore_errors=True)
         in_progress = Cycle.from_string(keep_id)
@@ -86,11 +91,13 @@ def _finish_interrupted_renames(layout: StorageLayout) -> None:
     for cid, is_partial in layout.iter_proc_entries():
         if not is_partial:
             continue
-        partial_dir = layout.proc_root / f"{cid}{PARTIAL_SUFFIX}"
-        final_dir = layout.proc_root / cid
+        c = Cycle.from_string(cid)
+        partial_dir = layout.proc_cycle_dir(c, partial=True)
+        final_dir = layout.proc_cycle_dir(c, partial=False)
         marker_in_partial = partial_dir / COMPLETE_MARKER
         if marker_in_partial.exists() and not final_dir.exists():
             log.warning("finishing interrupted rename: %s -> %s", partial_dir, final_dir)
+            final_dir.parent.mkdir(parents=True, exist_ok=True)
             os.rename(partial_dir, final_dir)
 
 
@@ -101,9 +108,17 @@ def _prune_orphan_raw(
     allowed = {c.id for c in (current_good, in_progress) if c is not None}
     for cid in layout.iter_raw_cycle_ids():
         if cid not in allowed:
-            stale = layout.raw_root / cid
+            c = Cycle.from_string(cid)
+            stale = layout.raw_cycle_dir(c)
             log.info("pruning orphan raw dir %s", stale)
             shutil.rmtree(stale, ignore_errors=True)
+    # Clean up empty date-level parents.
+    for date_dir in layout.iter_raw_date_dirs():
+        try:
+            if not any(date_dir.iterdir()):
+                date_dir.rmdir()
+        except OSError:
+            pass
 
 
 def atomic_write(path: Path, data: bytes) -> None:

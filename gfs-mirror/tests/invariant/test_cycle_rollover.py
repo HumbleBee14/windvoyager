@@ -11,7 +11,7 @@ import pytest
 from gfs_mirror.domain.cycle import Cycle
 from gfs_mirror.pipeline.runner import run_cycle
 from gfs_mirror.storage import retainer
-from gfs_mirror.storage.layout import COMPLETE_MARKER, StorageLayout
+from gfs_mirror.storage.layout import StorageLayout
 
 from tests.conftest import FakeS3, always_ok, make_flaky_process_fn
 
@@ -19,11 +19,15 @@ pytestmark = pytest.mark.asyncio
 
 
 def _count_complete(layout: StorageLayout) -> int:
-    return sum(
-        1
-        for p in layout.proc_root.iterdir()
-        if p.is_dir() and not p.name.endswith(".partial") and (p / COMPLETE_MARKER).exists()
-    )
+    """How many cycles on disk have a .complete marker (post-rename, final dirs)."""
+    n = 0
+    for cid, is_partial in layout.iter_proc_entries():
+        if is_partial:
+            continue
+        c = Cycle.from_string(cid)
+        if layout.complete_marker(c, partial=False).exists():
+            n += 1
+    return n
 
 
 async def test_n_then_n_plus_1_swaps_cleanly(tiny_config, fake_s3: FakeS3, thread_pool_factory):

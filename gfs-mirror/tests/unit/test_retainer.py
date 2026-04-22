@@ -41,7 +41,7 @@ def test_publish_refuses_if_final_exists(tmp_path):
     lay = _layout(tmp_path)
     c = Cycle(2026, 4, 22, 12)
     _make_partial(lay, c)
-    lay.proc_cycle_dir(c, partial=False).mkdir()
+    lay.proc_cycle_dir(c, partial=False).mkdir(parents=True)
 
     with pytest.raises(FileExistsError):
         retainer.publish(lay, c)
@@ -63,11 +63,11 @@ def test_prune_except_wipes_everything_else(tmp_path):
     # Set up: old complete, keep complete, stuck still partial, all have raw dirs too.
     for c in (old, keep):
         d = lay.proc_cycle_dir(c, partial=False)
-        d.mkdir()
+        d.mkdir(parents=True)
         (d / ".complete").touch()
-    lay.proc_cycle_dir(stuck, partial=True).mkdir()
+    lay.proc_cycle_dir(stuck, partial=True).mkdir(parents=True)
     for c in (old, keep, stuck):
-        lay.raw_cycle_dir(c).mkdir()
+        lay.raw_cycle_dir(c).mkdir(parents=True)
 
     retainer.prune_except(lay, keep)
 
@@ -84,14 +84,17 @@ def test_prune_except_wipes_everything_else(tmp_path):
 
 def test_find_current_good_returns_newest_complete(tmp_path):
     lay = _layout(tmp_path)
-    for cid in ("2026042200", "2026042206", "2026042212"):
-        d = lay.proc_root / cid
-        d.mkdir()
+    for hh in ("00", "06", "12"):
+        c = Cycle.from_string(f"20260422{hh}")
+        d = lay.proc_cycle_dir(c, partial=False)
+        d.mkdir(parents=True)
         (d / ".complete").touch()
     # missing marker — should be ignored
-    (lay.proc_root / "2026042218").mkdir()
+    c_nomarker = Cycle.from_string("2026042218")
+    lay.proc_cycle_dir(c_nomarker, partial=False).mkdir(parents=True)
     # partial — ignored
-    (lay.proc_root / "2026042300.partial").mkdir()
+    c_partial = Cycle.from_string("2026042300")
+    lay.proc_cycle_dir(c_partial, partial=True).mkdir(parents=True)
 
     assert retainer.find_current_good(lay) == "2026042212"
 

@@ -105,10 +105,19 @@ def tiny_config(tmp_path: Path) -> Config:
 
 @pytest.fixture(autouse=True)
 def fast_backoff(monkeypatch):
-    """Make retries effectively instant in tests."""
-    from gfs_mirror.pipeline import download as dl_mod
+    """Make retries effectively instant in tests.
 
-    monkeypatch.setattr(dl_mod, "backoff_seconds", lambda attempt: 0.001)
+    IMPORTANT: runner.py imports `backoff_seconds` by name (`from ... import
+    backoff_seconds`), so we must patch both the source module AND the runner's
+    imported reference. Patching only the source leaves the runner calling the
+    real 30s-5min backoff, which turns retry-heavy tests into 30+ minute hangs.
+    """
+    from gfs_mirror.pipeline import download as dl_mod
+    from gfs_mirror.pipeline import runner as runner_mod
+
+    fast = lambda attempt: 0.001  # noqa: E731
+    monkeypatch.setattr(dl_mod, "backoff_seconds", fast)
+    monkeypatch.setattr(runner_mod, "backoff_seconds", fast)
 
 
 @pytest.fixture
