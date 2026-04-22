@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from gfs_mirror.config import Config
+from gfs_mirror.config import DEFAULT_WBPROC, DEFAULT_WBRAW, Config
 
 
 def _base_env(**overrides):
@@ -26,14 +26,16 @@ def test_minimum_viable_config_uses_sane_defaults():
     assert cfg.log_level == "INFO"
 
 
-def test_missing_wbraw_fails():
-    with pytest.raises(ValueError, match="WBRAW"):
-        Config.from_env({"WBPROC": "/tmp/proc"})
+def test_empty_env_falls_back_to_home_defaults():
+    cfg = Config.from_env({})
+    assert cfg.raw_dir == DEFAULT_WBRAW
+    assert cfg.proc_dir == DEFAULT_WBPROC
 
 
-def test_missing_wbproc_fails():
-    with pytest.raises(ValueError, match="WBPROC"):
-        Config.from_env({"WBRAW": "/tmp/raw"})
+def test_wbraw_alone_uses_default_for_wbproc():
+    cfg = Config.from_env({"WBRAW": "/tmp/custom"})
+    assert str(cfg.raw_dir) == "/tmp/custom"
+    assert cfg.proc_dir == DEFAULT_WBPROC
 
 
 def test_invalid_grid_rejected():

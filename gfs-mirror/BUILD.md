@@ -7,64 +7,88 @@ cd gfs-mirror
 make install      # uv sync --all-extras   (creates .venv/)
 ```
 
-## Run
+## Run the service (long-running daemon)
 
 ```bash
-export WBRAW=/path/to/raw            # required — scratch dir for .grib2 files
-export WBPROC=/path/to/proc          # required — processed output root
-make run                              # python -m gfs_mirror
+make run          # python -m gfs_mirror — runs forever until Ctrl-C / SIGTERM
 ```
 
-Or for a one-shot live smoke (downloads 2 real files from NOAA, ~3s):
+This is the actual service. It:
+
+1. Recovers any interrupted state from disk on startup.
+2. Computes the latest GFS cycle NOAA should have published.
+3. Polls S3 until that cycle's `f000` appears.
+4. Downloads and processes every lead-hour (with retry/corruption handling).
+5. Atomically publishes the cycle and prunes previous data.
+6. Waits for the next cycle (6h later), repeats. Forever.
+
+Stop with Ctrl-C; it handles SIGINT/SIGTERM cleanly.
+
+## Config via `.env` (recommended)
+
+Create `.env` in the `gfs-mirror/` folder (or any parent dir). It's auto-loaded on startup — no `export` needed:
+
+```bash
+cp .env.example .env     # then edit to taste
+make run
+```
+
+Defaults are sensible — you can run **with no `.env` at all** and data will land under `~/.gfs-mirror/`.
+
+## Where data goes
+
+Nested by cycle date, then cycle hour — mirrors NOAA's S3 layout and matches the task spec's "subfolder for the cycle date."
+
+```
+$WBRAW/
+  20260422/                  # cycle date (YYYYMMDD)
+    12/                      # cycle hour (00, 06, 12, or 18)
+      f000.grib2             # raw download, pruned after publish
+      f003.grib2
+
+$WBPROC/
+  20260422/
+    12/                      # current good cycle (post-publish)
+      1776859200             # filename = unix ts of the forecast moment
+      1776870000
+      .complete              # sentinel: cycle fully processed
+      .manifest.json         # resume state (for crash recovery)
+    12.partial/              # (only while a cycle is in progress)
+```
+
+- `WBRAW` defaults to `~/.gfs-mirror/raw`
+- `WBPROC` defaults to `~/.gfs-mirror/proc`
+- Both are created automatically if missing.
+
+## Verify it works (smoke test — not the service)
 
 ```bash
 .venv/bin/python scripts/smoke.py
 ```
 
-## Where data goes
+**This is a one-shot verification tool, NOT the service.** It picks a recent cycle, runs the full pipeline with 2 lead-hours and a fast process_fn (no 40s sleep), writes output to `gfs-mirror/smoke-output/`, and exits. ~2-3 seconds. Useful for:
 
-Nested by cycle date, then cycle hour — mirrors NOAA's own S3 layout
-(`gfs.YYYYMMDD/HH/atmos/`) and makes the spec's "subfolder for the cycle date"
-a literal match.
+- Confirming aioboto3 + the NOAA public bucket works from your network.
+- Seeing exactly what a real processed cycle looks like on disk.
+- Debugging without waiting 3.5 minutes for a full cycle.
 
-```
-$WBRAW/
-  20260422/                            # cycle date (YYYYMMDD)
-    12/                                # cycle hour (HH ∈ {00,06,12,18})
-      f000.grib2                       # raw download, pruned post-publish
-      f003.grib2
-      ...
-
-$WBPROC/
-  20260422/
-    12/                                # current good cycle (post-publish)
-      1776859200                       # filename = unix ts of forecast moment
-      1776870000
-      .complete                        # sentinel: cycle fully processed
-      .manifest.json                   # per-lead progress (for crash recovery)
-    12.partial/                        # (only while a cycle is in progress)
-```
-
-- Filename = `int((cycle_start + lead_hours * 3600).timestamp())`.
-  E.g. cycle `20260422/12` with `f006` → filename `1776880800` (= 18:00 UTC Apr 22, 2026).
-- The `.partial` suffix lives on the **hour** dir, so the atomic publish is
-  a single `os.rename("20260422/12.partial" → "20260422/12")`.
+If you want the real thing running, use `make run`.
 
 ## Testing
 
 ```bash
-make test                             # all 87 tests, ~8s
-make test-unit                        # 77 tests, <0.1s
-make test-integration                 # 7 tests against fake S3
-make test-invariant                   # 3 tests: never-empty + skip-broken-cycle
+make test                # all 89 tests, ~8s
+make test-unit           # 77 tests, <0.1s
+make test-integration    # 7 tests against fake S3
+make test-invariant      # 3 tests: never-empty + skip-broken-cycle
 ```
 
-## Config knobs (env vars)
+## All env vars (all optional)
 
 | Var | Default | Purpose |
 |---|---|---|
-| `WBRAW` | *required* | raw `.grib2` scratch dir |
-| `WBPROC` | *required* | processed output root |
+| `WBRAW` | `~/.gfs-mirror/raw` | raw `.grib2` scratch dir |
+| `WBPROC` | `~/.gfs-mirror/proc` | processed output root |
 | `GFSM_GRID` | `1p00` | `1p00` or `0p25` |
 | `GFSM_SCHEDULE` | `0-48:3,48-192:6` | lead-hour sampling; format `start-end:step,...` |
 | `GFSM_DOWNLOAD_CONCURRENCY` | 8 | parallel S3 downloads |
@@ -73,12 +97,12 @@ make test-invariant                   # 3 tests: never-empty + skip-broken-cycle
 | `GFSM_CYCLE_TIMEOUT_HOURS` | 5 | abandon a cycle after this |
 | `GFSM_PUBLISH_LAG_MINUTES` | 210 | expected NOAA publish lag from cycle start |
 | `GFSM_POLL_INTERVAL_SEC` | 60 | S3 polling cadence for new cycles |
+| `GFSM_LOG_LEVEL` | `INFO` | `DEBUG`/`INFO`/`WARNING`/`ERROR` |
 
-Full default file in [`.env.example`](.env.example).
+See [`.env.example`](.env.example) for a copyable template.
 
 ## Notes
 
 - **Source:** public NOAA bucket `noaa-gfs-bdp-pds` (anonymous S3, no credentials).
-- **Cadence:** 1° grid is natively 3-hourly. Task's literal "2-hourly first 12h" requires 0.25° (`GFSM_GRID=0p25`, `GFSM_SCHEDULE=0-12:2,12-48:3,48-192:6`) — see [DESIGN_NOTES.md](DESIGN_NOTES.md#2-the-spec-vs-reality-gap-we-hit).
-- **Cycle dir name:** nested `YYYYMMDD/HH/`. Literal match for spec's "subfolder for the cycle date" (outer dir is the date) and matches NOAA's own S3 layout.
-- **Invariant:** after the first successful cycle, exactly one `WBPROC/<cycle>/` with `.complete` exists at all times. Verified by `tests/invariant/`.
+- **Cadence:** 1° grid is natively 3-hourly. Task's literal "2-hourly first 12h" requires 0.25° — flip `GFSM_GRID=0p25` and adjust schedule. See [DESIGN_NOTES.md](DESIGN_NOTES.md#2-the-spec-vs-reality-gap-we-hit).
+- **Invariant:** after the first successful cycle, exactly one `WBPROC/<date>/<hour>/` with `.complete` exists at all times. Verified by `tests/invariant/`.

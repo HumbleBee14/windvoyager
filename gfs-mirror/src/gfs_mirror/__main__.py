@@ -8,6 +8,7 @@ import signal
 import sys
 
 from gfs_mirror.config import Config
+from gfs_mirror.dotenv import load_dotenv
 from gfs_mirror.logging_ import setup_logging
 from gfs_mirror.pipeline.watcher import CycleWatcher
 from gfs_mirror.provided import process_file
@@ -17,11 +18,14 @@ from gfs_mirror.storage.recovery import scan_and_repair
 
 
 async def _amain() -> int:
+    dotenv_path = load_dotenv()
     cfg = Config.from_env()
     setup_logging(cfg.log_level)
     log = logging.getLogger("gfs_mirror")
+    if dotenv_path is not None:
+        log.info("loaded config from %s", dotenv_path)
     log.info(
-        "starting gfs-mirror: grid=%s schedule=%s (%d leads) raw=%s proc=%s",
+        "starting gfs-mirror service: grid=%s schedule=%s (%d leads) raw=%s proc=%s",
         cfg.grid,
         cfg.schedule_spec,
         len(cfg.lead_hours),

@@ -14,6 +14,12 @@ from gfs_mirror.domain.schedule import parse_schedule
 
 VALID_GRIDS = ("1p00", "0p25")
 
+# If WBRAW / WBPROC are unset, we fall back to these paths under the user's
+# home directory. Keeps `make run` working out of the box without env setup.
+DEFAULT_DATA_ROOT = Path.home() / ".gfs-mirror"
+DEFAULT_WBRAW = DEFAULT_DATA_ROOT / "raw"
+DEFAULT_WBPROC = DEFAULT_DATA_ROOT / "proc"
+
 
 @dataclass(frozen=True)
 class Config:
@@ -38,8 +44,8 @@ class Config:
     def from_env(cls, env: dict[str, str] | None = None) -> Config:
         e = env if env is not None else dict(os.environ)
 
-        raw_dir = Path(_require(e, "WBRAW"))
-        proc_dir = Path(_require(e, "WBPROC"))
+        raw_dir = Path(e["WBRAW"].strip()) if e.get("WBRAW", "").strip() else DEFAULT_WBRAW
+        proc_dir = Path(e["WBPROC"].strip()) if e.get("WBPROC", "").strip() else DEFAULT_WBPROC
 
         grid = e.get("GFSM_GRID", "1p00").strip()
         if grid not in VALID_GRIDS:
@@ -62,13 +68,6 @@ class Config:
             cycle_timeout_hours=_int(e, "GFSM_CYCLE_TIMEOUT_HOURS", 5, min_=1),
             log_level=e.get("GFSM_LOG_LEVEL", "INFO").upper(),
         )
-
-
-def _require(env: dict[str, str], key: str) -> str:
-    v = env.get(key, "").strip()
-    if not v:
-        raise ValueError(f"required env var {key} is not set")
-    return v
 
 
 def _int(env: dict[str, str], key: str, default: int, *, min_: int) -> int:
