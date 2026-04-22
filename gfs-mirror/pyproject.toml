@@ -8,6 +8,7 @@ dependencies = [
     "aioboto3>=12.0.0",
     "botocore>=1.34.0",
     "tenacity>=8.2.0",
+    "numpy>=1.26",
 ]
 
 [project.optional-dependencies]
