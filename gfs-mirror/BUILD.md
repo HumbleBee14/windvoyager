@@ -37,28 +37,124 @@ Defaults are sensible — you can run **with no `.env` at all** and data will la
 
 ## Where data goes
 
-Nested by cycle date, then cycle hour — mirrors NOAA's S3 layout and matches the task spec's "subfolder for the cycle date."
-
-```
-$WBRAW/
-  20260422/                  # cycle date (YYYYMMDD)
-    12/                      # cycle hour (00, 06, 12, or 18)
-      f000.grib2             # raw download, pruned after publish
-      f003.grib2
-
-$WBPROC/
-  20260422/
-    12/                      # current good cycle (post-publish)
-      1776859200             # filename = unix ts of the forecast moment
-      1776870000
-      .complete              # sentinel: cycle fully processed
-      .manifest.json         # resume state (for crash recovery)
-    12.partial/              # (only while a cycle is in progress)
-```
+Nested by cycle date (YYYYMMDD), then cycle hour (00/06/12/18) — mirrors
+NOAA's own S3 layout (`gfs.YYYYMMDD/HH/atmos/…`) and matches the task spec's
+"subfolder for the cycle date."
 
 - `WBRAW` defaults to `~/.gfs-mirror/raw`
 - `WBPROC` defaults to `~/.gfs-mirror/proc`
-- Both are created automatically if missing.
+- Both directories are created automatically. Override with env vars.
+
+### During an active cycle (mid-processing)
+
+Say the service is currently processing the **12Z cycle on Apr 22, 2026**, having already published the **06Z cycle** earlier that morning. Under the default schedule (`0-48:3,48-192:6` → 41 files per cycle):
+
+```
+$WBRAW/
+  20260422/
+    12/                              # raw GRIB2s for the active cycle
+      f000.grib2      (~42 MB)       # downloading in parallel (N=8);
+      f003.grib2      (~45 MB)       # each file is unlinked the instant
+      f006.grib2      (~45 MB)       # process_file succeeds on it,
+      f009.grib2      (~45 MB)       # so this dir's contents shrink
+      ... (3h bucket) ...            # as the cycle progresses.
+      f048.grib2      (~45 MB)       # after publish, the whole dir is
+      f054.grib2      (~45 MB)       # wiped (spec: "delete all files
+      f060.grib2      (~45 MB)       # after the cycle is complete").
+      ... (6h bucket) ...
+      f192.grib2      (~45 MB)
+
+$WBPROC/
+  20260422/
+    06/                              # PREVIOUS GOOD CYCLE — still live
+      .complete                      # sentinel: this cycle is readable
+      .manifest.json                 # cycle metadata + per-lead state
+      1776837600                     # 2026-04-22 06:00Z  (f000)
+      1776848400                     # 2026-04-22 09:00Z  (f003)
+      1776859200                     # 2026-04-22 12:00Z  (f006)
+      1776870000                     # 2026-04-22 15:00Z  (f009)
+      1776880800                     # 2026-04-22 18:00Z  (f012)
+      ...                            # — 3h bucket (17 files total) —
+      1777010400                     # 2026-04-24 06:00Z  (f048)
+      1777032000                     # 2026-04-24 12:00Z  (f054)
+      ...                            # — 6h bucket (24 files total) —
+      1777528800                     # 2026-04-30 06:00Z  (f192)
+
+    12.partial/                      # CURRENT CYCLE — still filling
+      .manifest.json                 # tracks which leads are done
+      1776880800                     # 2026-04-22 18:00Z  (f000) ✓ done
+      1776891600                     # 2026-04-22 21:00Z  (f003) ✓ done
+      ...                            # (leads still being fetched appear
+                                     #  here one by one as they land)
+```
+
+**Consumers always read from `$WBPROC/20260422/06/`** — the one with
+`.complete`. The `12.partial/` dir is invisible to them until it's renamed.
+
+### After the 12Z cycle finishes publishing
+
+One atomic `os.rename` promotes the partial; then pruning sweeps everything else:
+
+```
+$WBRAW/
+  (empty — 20260422/ was pruned)
+
+$WBPROC/
+  20260422/
+    12/                              # NEW current good cycle
+      .complete
+      .manifest.json
+      1776880800                     # 2026-04-22 18:00Z  (f000)
+      1776891600                     # 2026-04-22 21:00Z  (f003)
+      ...                            # all 41 files
+      1777550400                     # 2026-04-30 12:00Z  (f192)
+    # 06/ — GONE (the older cycle is pruned on publish of its successor)
+```
+
+At any moment, there is **exactly one** `<date>/<hour>/` directory with a
+`.complete` marker. That's the rule the `tests/invariant/` tier enforces.
+
+### Across days
+
+When the next UTC day rolls over, a second date folder appears briefly:
+
+```
+$WBPROC/
+  20260422/
+    18/                              # Apr 22 18Z run — current good
+      .complete
+      ... 41 files ...
+  20260423/
+    00.partial/                      # Apr 23 00Z run — being built
+      .manifest.json
+      ...
+```
+
+After `20260423/00/` publishes, `20260422/` is pruned entirely (empty date
+dirs get removed too).
+
+### File naming — what the timestamps mean
+
+Filenames under `<date>/<hour>/` are **Unix timestamps of the forecast
+moment**, per task spec. They are *not* the download time; they are *when*
+the atmosphere is being predicted. Formula:
+
+```
+filename = int((cycle_start_utc + lead_hour_hours * 3600).timestamp())
+```
+
+For the 12Z cycle on 2026-04-22:
+
+| Lead | Forecast moment (UTC) | Filename     |
+|------|-----------------------|--------------|
+| f000 | 2026-04-22 12:00      | `1776859200` |
+| f003 | 2026-04-22 15:00      | `1776870000` |
+| f024 | 2026-04-23 12:00      | `1776945600` |
+| f096 | 2026-04-26 12:00      | `1777204800` |
+| f192 | 2026-04-30 12:00      | `1777550400` |
+
+A downstream consumer can `ls $WBPROC/20260422/12/ | sort -n` and get
+chronologically ordered forecasts without parsing anything.
 
 ## Verify it works (smoke test — not the service)
 

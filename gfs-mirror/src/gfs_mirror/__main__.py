@@ -34,6 +34,7 @@ async def _amain() -> int:
     )
 
     layout = StorageLayout(raw_root=cfg.raw_dir, proc_root=cfg.proc_dir)
+    # Check Previous Session for Recovery
     recovery = scan_and_repair(layout)
     if recovery.current_good is not None:
         log.info("recovery: current good cycle = %s", recovery.current_good.id)

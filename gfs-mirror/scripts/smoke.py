@@ -1,13 +1,19 @@
 """End-to-end smoke test: real NOAA S3 download + fake-fast process_fn.
 
-Picks a recent published cycle, runs ONE cycle with 2 lead hours through the
-real runner (AioBotoS3Client + StorageLayout + ProcessPoolExecutor), and
-verifies the on-disk layout at the end.
+Picks a recent published cycle and runs the full pipeline over a 3-lead
+representative slice of the default schedule:
+    f000   — start of the 3-hourly bucket
+    f024   — middle of the 3-hourly bucket
+    f096   — middle of the 6-hourly bucket
 
-Proves: S3 anonymous auth, aioboto3 download path, runner orchestration,
-manifest persistence, publish + prune, atomicity markers. What it does NOT
-prove (by design for a quick smoke): corruption-retry, cycle-stuck skip,
-cycle-rollover invariant. Those are covered by the fake-S3 integration tests.
+Before the pipeline runs, each raw GRIB is also downloaded to
+`preserved-raw/` so you can inspect what NOAA actually serves — the
+pipeline itself prunes its own raw copies after publish (per task spec).
+
+Proves: S3 anonymous auth, aioboto3 download path, runner orchestration
+across both cadence buckets, manifest persistence, atomic publish, post-
+publish prune. What it does NOT prove (covered by fake-S3 tests):
+corruption-retry, cycle-stuck skip, cycle-rollover invariant.
 
 Usage:
     uv run python scripts/smoke.py
@@ -58,25 +64,26 @@ async def main() -> int:
     log = logging.getLogger("smoke")
 
     # Persistent local workdir so you can inspect the downloaded + processed files.
-    # Name is dot-free so Finder / IDE trees show it.
     workdir = Path(__file__).parent.parent / "smoke-output"
     if workdir.exists():
         shutil.rmtree(workdir)
     raw = workdir / "raw"
     proc = workdir / "proc"
-    preserved_raw_dir = workdir / "preserved-raw-sample"
+    preserved_raw = workdir / "preserved-raw"
     workdir.mkdir(parents=True)
-    preserved_raw_dir.mkdir()
+    preserved_raw.mkdir()
     log.info("smoke test workdir: %s", workdir)
 
-    # Build a Config directly (no env) with a 2-lead schedule and 1p00 grid.
+    # 3-lead representative slice: spans both cadence buckets of the default
+    # schedule (3h first 48h, 6h to 192h). Custom schedule pins exactly which
+    # leads we want — parse_schedule step=1 with those bounds picks 3 points.
     env = {
         "WBRAW": str(raw),
         "WBPROC": str(proc),
         "GFSM_GRID": "1p00",
-        "GFSM_SCHEDULE": "0-3:3",  # 2 leads: 0 and 3
-        "GFSM_DOWNLOAD_CONCURRENCY": "2",
-        "GFSM_PROCESS_CONCURRENCY": "2",
+        "GFSM_SCHEDULE": "0-0:1,24-24:1,96-96:1",  # -> [0, 24, 96]
+        "GFSM_DOWNLOAD_CONCURRENCY": "3",
+        "GFSM_PROCESS_CONCURRENCY": "3",
         "GFSM_MAX_FILE_RETRIES": "3",
         "GFSM_CYCLE_TIMEOUT_HOURS": "1",
         "GFSM_LOG_LEVEL": "INFO",
@@ -88,13 +95,15 @@ async def main() -> int:
     cycle = await pick_recent_cycle(s3, cfg.grid)
     log.info("picked cycle %s (leads=%s)", cycle.id, cfg.lead_hours)
 
-    # Preserve one raw GRIB2 outside the pipeline so the user can see what NOAA
-    # actually serves. The pipeline will delete its own copies after publishing.
-    sample_key = cycle.s3_key(0, cfg.grid)
-    sample_dest = preserved_raw_dir / f"gfs.t{cycle.hour_str}z.pgrb2.{cfg.grid}.f000.grib2"
-    log.info("preserving sample raw: %s", sample_key)
-    sample_size = await s3.download(sample_key, sample_dest)
-    log.info("preserved %s (%d bytes)", sample_dest, sample_size)
+    # Preserve every raw GRIB outside the pipeline BEFORE running it, so you can
+    # inspect what NOAA actually serves. The pipeline prunes its own raw copies
+    # after publishing (per task spec: "delete all files after cycle is complete").
+    log.info("preserving %d raw files for inspection...", len(cfg.lead_hours))
+    for h in cfg.lead_hours:
+        key = cycle.s3_key(h, cfg.grid)
+        dest = preserved_raw / f"gfs.t{cycle.hour_str}z.pgrb2.{cfg.grid}.f{h:03d}.grib2"
+        size = await s3.download(key, dest)
+        log.info("  preserved f%03d  %d bytes  -> %s", h, size, dest.name)
 
     t0 = time.monotonic()
     result = await run_cycle(cycle, cfg, s3, layout, fast_process)
